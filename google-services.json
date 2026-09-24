@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "190579731195",
+        "project_id": "mbga-delivery-partner",
+        "storage_bucket": "mbga-delivery-partner.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:190579731195:android:9a8bb3b67331db70eede5e",
+                "android_client_info": {
+                    "package_name": "com.mbga.deliverypartner"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyBV16WQZehCjbrOSkMYPWqbFbq7_DP7Vj0"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

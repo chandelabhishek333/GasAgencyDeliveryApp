@@ -1,0 +1,34 @@
+# dependencies
+node_modules/
+
+# expo (to be removed during migration, ignored meanwhile)
+.expo/
+.expo-shared/
+
+# native build outputs (once android/ exists)
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/.cxx/
+*.keystore
+!debug.keystore
+
+# env
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# logs
+*.log
+npm-debug.log*
+
+# os
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/
