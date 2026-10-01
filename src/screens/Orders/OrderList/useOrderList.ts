@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { usePullToRefresh } from '../../../hooks/usePullToRefresh';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchOrders, setSearchQuery, setStatusFilter } from '../../../store/slices/ordersSlice';
 import { setActiveDelivery } from '../../../store/slices/deliverySlice';
@@ -28,6 +29,8 @@ export const useOrderList = (navigation: OrderListScreenProps['navigation']) => 
     dispatch(fetchOrders());
   }, [dispatch]);
 
+  const { refreshing, handleRefresh } = usePullToRefresh(useCallback(() => [dispatch(fetchOrders())], [dispatch]));
+
   // Each status opens where the driver actually is in that order's flow:
   // pending -> Order Details, out for delivery -> straight to location
   // verification (Active Delivery), completed/failed -> read-only view
@@ -48,6 +51,8 @@ export const useOrderList = (navigation: OrderListScreenProps['navigation']) => 
   };
 
   return {
+    refreshing,
+    handleRefresh,
     orders,
     statusCounts,
     statusFilter,

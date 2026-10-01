@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, Pressable, StatusBar, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StatusBar, Text, View } from 'react-native';
 import { Header } from '../../../components/layout/Header';
 import { Badge } from '../../../components/common/Badge';
 import { Loader } from '../../../components/common/Loader';
@@ -18,8 +18,17 @@ const PERIOD_TABS: Array<{ key: OrderHistoryPeriod; label: string }> = [
 
 /** Delivery History: period tabs + one card per finished delivery (GET /deliveries/history). */
 export const OrderHistoryScreen: React.FC<OrderHistoryScreenProps> = ({ navigation }) => {
-  const { period, setPeriod, history, isInitialLoading, error, handleEntryPress, handleBack } =
-    useOrderHistory(navigation);
+  const {
+    refreshing,
+    handleRefresh,
+    period,
+    setPeriod,
+    history,
+    isInitialLoading,
+    error,
+    handleEntryPress,
+    handleBack,
+  } = useOrderHistory(navigation);
 
   return (
     <View style={styles.container}>
@@ -52,6 +61,14 @@ export const OrderHistoryScreen: React.FC<OrderHistoryScreenProps> = ({ navigati
             <FlatList
               data={history}
               keyExtractor={(item) => item.id}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  colors={[Colors.primary]}
+                  tintColor={Colors.primary}
+                />
+              }
               contentContainerStyle={styles.listContent}
               renderItem={({ item }: { item: HistoryDeliveryEntry }) => {
                 const isFailed = item.status === 'failed';

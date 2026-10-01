@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react';
+import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 import { Alert } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchTodayDeliveries } from '../../store/slices/deliverySlice';
@@ -71,6 +72,13 @@ export const useHomeScreen = (navigation: HomeScreenProps['navigation']) => {
     dispatch(fetchInventory());
   }, [dispatch]);
 
+  const { refreshing, handleRefresh } = usePullToRefresh(
+    useCallback(
+      () => [dispatch(fetchTodayDeliveries()), dispatch(fetchInventory()), dispatch(syncDutyStatus())],
+      [dispatch],
+    ),
+  );
+
   // The switch flips immediately; updateDutyStatus flips it back if the
   // server refuses, and the driver is told why.
   const handleToggleDuty = useCallback(
@@ -95,6 +103,8 @@ export const useHomeScreen = (navigation: HomeScreenProps['navigation']) => {
   const todayDate = formatShortDate(new Date());
 
   return {
+    refreshing,
+    handleRefresh,
     driver,
     initials: driver ? driver.avatarInitials ?? getInitials(driver.name) : '',
     greeting: getGreeting(),

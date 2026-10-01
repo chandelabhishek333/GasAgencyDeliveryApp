@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import { useNotifications } from '../../hooks/useNotifications';
+import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 import type { Notification } from '../../types';
 
 type NotificationsTab = 'all' | 'unread';
 
 export const useNotificationsScreen = () => {
-  const { notifications, isLoading, unreadCount, markRead, markAllRead } = useNotifications();
+  const { notifications, isLoading, unreadCount, markRead, markAllRead, reload } = useNotifications();
+  const { refreshing, handleRefresh } = usePullToRefresh(reload);
   const [tab, setTab] = useState<NotificationsTab>('all');
   const [isMarkingAllRead, setMarkingAllRead] = useState(false);
 
@@ -35,6 +37,8 @@ export const useNotificationsScreen = () => {
   };
 
   return {
+    refreshing,
+    handleRefresh,
     tab,
     setTab,
     notifications: filtered,

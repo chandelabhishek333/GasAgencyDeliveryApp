@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { usePullToRefresh } from '../../../hooks/usePullToRefresh';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchProfile } from '../../../store/slices/userSlice';
 import { logoutAll, logoutUser } from '../../../store/slices/authSlice';
@@ -28,6 +29,9 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
       dispatch(fetchProfile());
     }, [dispatch]),
   );
+
+  // GET /driver/profile carries both the driver info and today's shiftStats.
+  const { refreshing, handleRefresh } = usePullToRefresh(useCallback(() => [dispatch(fetchProfile())], [dispatch]));
 
   // Prefer the freshly-fetched full profile; fall back to the lighter
   // session identity from login while it's loading.
@@ -59,6 +63,8 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
   };
 
   return {
+    refreshing,
+    handleRefresh,
     driver,
     /** Today's totals from GET /driver/profile — null until it loads (cards show "—"). */
     shiftStats: profile?.shiftStats ?? null,

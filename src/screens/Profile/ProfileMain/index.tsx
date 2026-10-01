@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StatusBar, Text, View } from 'react-native';
 import { Header } from '../../../components/layout/Header';
 import { Colors } from '../../../theme';
 import { styles } from './styles';
@@ -27,6 +27,8 @@ const PLACEHOLDER_HUB = 'MBGA Central Depot — Gate 2';
 /** Screen 12 — My Profile: header, stats, vehicle/hub info, menu groups, logout. */
 export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation }) => {
   const {
+    refreshing,
+    handleRefresh,
     driver,
     shiftStats,
     initials,
@@ -65,6 +67,14 @@ export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation
         style={styles.content}
         contentContainerStyle={styles.contentInner}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
       >
         {/* Section A — Profile header */}
         <View style={styles.avatarSection}>

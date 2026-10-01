@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, Pressable, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Loader } from '../../../components/common/Loader';
 import { OrderCard } from '../../../components/delivery/OrderCard';
@@ -23,6 +23,8 @@ const FILTER_TABS: Array<{ key: OrderStatusFilter; label: (n: StatusCounts) => s
 /** Screen 5 — Today's Deliveries: search + status filter tabs + order list. */
 export const OrderListScreen: React.FC<OrderListScreenProps> = ({ navigation }) => {
   const {
+    refreshing,
+    handleRefresh,
     orders,
     statusCounts,
     statusFilter,
@@ -83,6 +85,14 @@ export const OrderListScreen: React.FC<OrderListScreenProps> = ({ navigation }) 
             <FlatList
               data={orders}
               keyExtractor={(item) => item.id}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  colors={[Colors.primary]}
+                  tintColor={Colors.primary}
+                />
+              }
               contentContainerStyle={styles.listContent}
               renderItem={({ item }: { item: Order }) => (
                 <OrderCard order={item} onPress={handleOrderPress} />

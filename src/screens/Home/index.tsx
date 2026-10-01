@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StatusBar, Switch, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StatusBar, Switch, Text, View } from 'react-native';
 import type { TextStyle, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/common/Button';
@@ -20,6 +20,8 @@ const STAT_ITEMS: Array<{ key: StatKey; label: string; cellStyle: ViewStyle; tex
 /** Screen 4 — Dashboard. The bottom tab bar is owned by MainTabNavigator, not this screen. */
 export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const {
+    refreshing,
+    handleRefresh,
     driver,
     initials,
     greeting,
@@ -66,6 +68,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           style={styles.content}
           contentContainerStyle={styles.contentInner}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[Colors.primary]}
+              tintColor={Colors.primary}
+            />
+          }
         >
           {error ? <Text style={styles.errorBanner}>{error}</Text> : null}
 

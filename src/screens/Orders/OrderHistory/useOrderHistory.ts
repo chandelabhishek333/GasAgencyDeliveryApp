@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { usePullToRefresh } from '../../../hooks/usePullToRefresh';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchOrderHistory } from '../../../store/slices/ordersSlice';
 import {
@@ -21,7 +22,14 @@ export const useOrderHistory = (navigation: OrderHistoryScreenProps['navigation'
     dispatch(fetchOrderHistory({ period }));
   }, [dispatch, period]);
 
+  // Re-fetches whichever period tab is showing.
+  const { refreshing, handleRefresh } = usePullToRefresh(
+    useCallback(() => [dispatch(fetchOrderHistory({ period }))], [dispatch, period]),
+  );
+
   return {
+    refreshing,
+    handleRefresh,
     period,
     setPeriod,
     history,

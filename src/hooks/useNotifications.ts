@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   fetchNotifications,
+  fetchUnreadCount,
   markAllNotificationsRead,
   markNotificationRead,
 } from '../store/slices/notificationsSlice';
@@ -26,7 +27,11 @@ export const useNotifications = () => {
     dispatch(fetchNotifications());
   }, [dispatch]);
 
+  // Reloads the list and the server's unread count (the tab bar badge).
+  const reload = useCallback(() => [dispatch(fetchNotifications()), dispatch(fetchUnreadCount())], [dispatch]);
+
   return {
+    reload,
     notifications,
     status,
     unreadCount,

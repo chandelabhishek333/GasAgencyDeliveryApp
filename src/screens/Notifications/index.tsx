@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, Pressable, StatusBar, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StatusBar, Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
 import { Header } from '../../components/layout/Header';
 import { Loader } from '../../components/common/Loader';
@@ -31,6 +31,8 @@ const ICON_BOX_STYLE_BY_TYPE: Record<NotificationType, ViewStyle> = {
  */
 export const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
   const {
+    refreshing,
+    handleRefresh,
     tab,
     setTab,
     notifications,
@@ -74,6 +76,14 @@ export const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
           <FlatList
             data={notifications}
             keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[Colors.primary]}
+                tintColor={Colors.primary}
+              />
+            }
             contentContainerStyle={styles.listContent}
             renderItem={({ item }: { item: Notification }) => (
               <Pressable
