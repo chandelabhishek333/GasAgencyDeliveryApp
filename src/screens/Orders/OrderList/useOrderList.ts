@@ -1,4 +1,6 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { useHasLoadedOnce } from '../../../hooks/useHasLoadedOnce';
 import { usePullToRefresh } from '../../../hooks/usePullToRefresh';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchOrders, setSearchQuery, setStatusFilter } from '../../../store/slices/ordersSlice';
@@ -25,11 +27,15 @@ export const useOrderList = (navigation: OrderListScreenProps['navigation']) => 
   const listStatus = useAppSelector(selectOrdersListStatus);
   const error = useAppSelector(selectOrdersError);
 
-  useEffect(() => {
-    dispatch(fetchOrders());
-  }, [dispatch]);
-
-  const { refreshing, handleRefresh } = usePullToRefresh(useCallback(() => [dispatch(fetchOrders())], [dispatch]));
+  // Reloaded on every focus (e.g. back from a completed delivery) and on pull-to-refresh.
+  const reload = useCallback(() => [dispatch(fetchOrders())], [dispatch]);
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
+  const { refreshing, handleRefresh } = usePullToRefresh(reload);
+  const hasLoadedOnce = useHasLoadedOnce(listStatus);
 
   // Each status opens where the driver actually is in that order's flow:
   // pending -> Order Details, out for delivery -> straight to location
@@ -57,7 +63,8 @@ export const useOrderList = (navigation: OrderListScreenProps['navigation']) => 
     statusCounts,
     statusFilter,
     searchQuery,
-    isInitialLoading: listStatus === 'loading' && orders.length === 0,
+    // Full-screen loader on the very first load only; focus re-fetches refresh in place.
+    isInitialLoading: !hasLoadedOnce && orders.length === 0,
     error,
     handleSearchChange: (text: string) => dispatch(setSearchQuery(text)),
     handleFilterChange: (filter: OrderStatusFilter) => dispatch(setStatusFilter(filter)),

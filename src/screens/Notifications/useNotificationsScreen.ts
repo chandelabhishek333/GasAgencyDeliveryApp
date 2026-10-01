@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useNotifications } from '../../hooks/useNotifications';
 import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 import type { Notification } from '../../types';
@@ -8,6 +9,12 @@ type NotificationsTab = 'all' | 'unread';
 
 export const useNotificationsScreen = () => {
   const { notifications, isLoading, unreadCount, markRead, markAllRead, reload } = useNotifications();
+  // Reloaded every time the tab gains focus, and on pull-to-refresh.
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
   const { refreshing, handleRefresh } = usePullToRefresh(reload);
   const [tab, setTab] = useState<NotificationsTab>('all');
   const [isMarkingAllRead, setMarkingAllRead] = useState(false);

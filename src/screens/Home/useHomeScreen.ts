@@ -1,6 +1,8 @@
-import { useCallback, useEffect } from 'react';
-import { usePullToRefresh } from '../../hooks/usePullToRefresh';
+import { useCallback } from 'react';
 import { Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import { useHasLoadedOnce } from '../../hooks/useHasLoadedOnce';
+import { usePullToRefresh } from '../../hooks/usePullToRefresh';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchTodayDeliveries } from '../../store/slices/deliverySlice';
 import { syncDutyStatus, updateDutyStatus } from '../../store/slices/authSlice';
@@ -64,20 +66,20 @@ export const useHomeScreen = (navigation: HomeScreenProps['navigation']) => {
   const nextDelivery = useAppSelector(selectNextDelivery);
   const inventory = useAppSelector(selectInventory);
 
-  // Live duty state (GET /driver/profile) and van stock (GET /driver/inventory)
-  // load alongside today's deliveries.
-  useEffect(() => {
-    dispatch(fetchTodayDeliveries());
-    dispatch(syncDutyStatus());
-    dispatch(fetchInventory());
-  }, [dispatch]);
-
-  const { refreshing, handleRefresh } = usePullToRefresh(
-    useCallback(
-      () => [dispatch(fetchTodayDeliveries()), dispatch(fetchInventory()), dispatch(syncDutyStatus())],
-      [dispatch],
-    ),
+  // Today's deliveries, van stock (GET /driver/inventory) and live duty
+  // state (GET /driver/profile) — reloaded every time Home gains focus and
+  // on pull-to-refresh.
+  const reload = useCallback(
+    () => [dispatch(fetchTodayDeliveries()), dispatch(fetchInventory()), dispatch(syncDutyStatus())],
+    [dispatch],
   );
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
+  const { refreshing, handleRefresh } = usePullToRefresh(reload);
+  const hasLoadedOnce = useHasLoadedOnce(todayStatus);
 
   // The switch flips immediately; updateDutyStatus flips it back if the
   // server refuses, and the driver is told why.
@@ -110,7 +112,8 @@ export const useHomeScreen = (navigation: HomeScreenProps['navigation']) => {
     greeting: getGreeting(),
     todayDate,
     nextDeliveryDate: nextDelivery?.deliveryDate ? formatDeliveryDate(nextDelivery.deliveryDate) : todayDate,
-    isInitialLoading: todayStatus === 'loading' && today.length === 0,
+    // Full-screen loader on the very first load only; focus re-fetches refresh in place.
+    isInitialLoading: !hasLoadedOnce && today.length === 0,
     error,
     stats,
     nextDelivery,

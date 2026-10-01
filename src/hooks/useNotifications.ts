@@ -1,4 +1,5 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useHasLoadedOnce } from './useHasLoadedOnce';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
   fetchNotifications,
@@ -13,9 +14,9 @@ import {
 } from '../store/selectors/notificationsSelectors';
 
 /**
- * Fetches notifications on mount and exposes the list, unread count,
- * mark-read and mark-all-read. Shared by Home (bell badge) and NotificationsScreen
- * (full list) so neither duplicates the fetch.
+ * The notifications list, unread count, `reload` (list + server unread
+ * count), mark-read and mark-all-read. Doesn't fetch by itself — the
+ * screen calls `reload` on focus; the tab bar keeps the badge fresh on its own.
  */
 export const useNotifications = () => {
   const dispatch = useAppDispatch();
@@ -23,9 +24,7 @@ export const useNotifications = () => {
   const status = useAppSelector(selectNotificationsStatus);
   const unreadCount = useAppSelector(selectUnreadCount);
 
-  useEffect(() => {
-    dispatch(fetchNotifications());
-  }, [dispatch]);
+  const hasLoadedOnce = useHasLoadedOnce(status);
 
   // Reloads the list and the server's unread count (the tab bar badge).
   const reload = useCallback(() => [dispatch(fetchNotifications()), dispatch(fetchUnreadCount())], [dispatch]);
@@ -35,7 +34,8 @@ export const useNotifications = () => {
     notifications,
     status,
     unreadCount,
-    isLoading: status === 'loading' && notifications.length === 0,
+    // Full-screen loader on the very first load only; focus re-fetches refresh in place.
+    isLoading: !hasLoadedOnce && notifications.length === 0,
     markRead: (notificationId: string) => dispatch(markNotificationRead(notificationId)),
     /** POST /notifications/read-all; resolves to the thunk's result so callers can unwrap() failures. */
     markAllRead: () => dispatch(markAllNotificationsRead()),
