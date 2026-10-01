@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { Colors, FontFamily, FontSize, FontWeight, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -18,16 +18,27 @@ export const styles = StyleSheet.create({
   iconWrap: {
     position: 'relative',
   },
-  badgeDot: {
+  badgeContainer: {
     position: 'absolute',
-    top: -2,
-    right: -3,
-    width: 8,
-    height: 8,
-    borderRadius: BorderRadius.round,
-    backgroundColor: Colors.secondary,
+    top: -4,
+    right: -10,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.errorRed,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: Colors.navBarBg,
+  },
+  badgeText: {
+    color: Colors.bgWhite,
+    fontSize: 10,
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   label: {
     fontFamily: FontFamily.medium,

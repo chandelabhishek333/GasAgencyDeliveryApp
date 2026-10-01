@@ -89,10 +89,15 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeKey, onTabPres
             onPress={() => onTabPress(tab.key)}
             accessibilityRole="tab"
             accessibilityState={{ selected: isActive }}
+            accessibilityLabel={showBadge ? `${tab.label}, ${unreadCount} unread` : tab.label}
           >
             <View style={styles.iconWrap}>
               {tab.renderIcon(color, isActive)}
-              {showBadge ? <View style={styles.badgeDot} /> : null}
+              {showBadge ? (
+                <View style={styles.badgeContainer}>
+                  <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                </View>
+              ) : null}
             </View>
             <Text style={[styles.label, tone]}>{tab.label}</Text>
           </Pressable>
