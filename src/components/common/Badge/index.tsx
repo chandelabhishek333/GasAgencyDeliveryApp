@@ -8,6 +8,7 @@ const CONTAINER_STYLE_BY_VARIANT: Record<BadgeVariant, ViewStyle> = {
   pending: styles.pending,
   inProgress: styles.inProgress,
   completed: styles.completed,
+  failed: styles.failed,
   delivered: styles.delivered,
   info: styles.info,
 };
@@ -16,6 +17,7 @@ const LABEL_STYLE_BY_VARIANT: Record<BadgeVariant, TextStyle> = {
   pending: styles.pendingLabel,
   inProgress: styles.inProgressLabel,
   completed: styles.completedLabel,
+  failed: styles.failedLabel,
   delivered: styles.deliveredLabel,
   info: styles.infoLabel,
 };

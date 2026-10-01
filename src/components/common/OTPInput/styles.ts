@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize } from '../../../theme';
 
 export const styles = StyleSheet.create({
   row: {
@@ -17,6 +17,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1.5,
     textAlign: 'center',
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.headingLg + 1.5,
     padding: 0,
   },

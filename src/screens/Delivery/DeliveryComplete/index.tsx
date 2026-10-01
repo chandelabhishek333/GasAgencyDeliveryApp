@@ -1,24 +1,74 @@
 import React from 'react';
-import { StatusBar, Text, View } from 'react-native';
+import { ScrollView, StatusBar, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/layout/Header';
 import { Button } from '../../../components/common/Button';
 import { Colors } from '../../../theme';
+import { formatRupees } from '../../../utils/formatRupees';
+import { PAYMENT_METHOD_LABEL, PAYMENT_SPLIT_LABEL } from '../../../utils/paymentMeta';
 import { styles } from './styles';
 import { useDeliveryComplete } from './useDeliveryComplete';
+import type { DeliverySummaryItem } from '../../../types';
 import type { DeliveryCompleteScreenProps } from './types';
 
+interface ReceiptItemsSectionProps {
+  title: string;
+  total: number;
+  items: DeliverySummaryItem[];
+}
+
 /**
- * Illustrative payment-collected figure — `DeliverySummary`
- * (src/types/delivery.types.ts) has no payment/amount field yet.
- * Swap for real data once the backend exposes it.
+ * One receipt section (delivered or empties). A single cylinder type is
+ * one row — section name with the type beneath it, quantity on the
+ * right. Several types get a header with a total badge and one sub-row
+ * per type. No breakdown at all (older summaries) falls back to the
+ * section total alone.
  */
-const PLACEHOLDER_PAYMENT_COLLECTED = '₹14,250 (Cash)';
+const ReceiptItemsSection: React.FC<ReceiptItemsSectionProps> = ({ title, total, items }) => {
+  if (items.length > 1) {
+    return (
+      <View style={styles.receiptSection}>
+        <View style={styles.receiptRow}>
+          <Text style={styles.receiptSectionTitle}>{title}</Text>
+          <View style={styles.totalBadge}>
+            <Text style={styles.totalBadgeText}>Total: {total}</Text>
+          </View>
+        </View>
+        {items.map((item, index) => (
+          <View key={`${item.label}-${index}`} style={styles.receiptSubRow}>
+            <Text style={styles.receiptSubLabel}>{item.label}</Text>
+            <Text style={styles.receiptSubValue}>{item.quantity}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  }
+
+  const [onlyItem] = items;
+  return (
+    <View style={styles.receiptRow}>
+      <View style={styles.receiptLabelGroup}>
+        <Text style={styles.receiptLabel}>{title}</Text>
+        {onlyItem ? <Text style={styles.receiptItemLabel}>{onlyItem.label}</Text> : null}
+      </View>
+      <Text style={styles.receiptValue}>{onlyItem?.quantity ?? total}</Text>
+    </View>
+  );
+};
 
 /** Screen 10 — Delivery Success. */
 export const DeliveryCompleteScreen: React.FC<DeliveryCompleteScreenProps> = ({ navigation }) => {
-  const { summary, handleViewNextDelivery, handleBackToDeliveries, handleBack } =
-    useDeliveryComplete(navigation);
+  const {
+    summary,
+    deliveredItems,
+    emptyItems,
+    payment,
+    isPartial,
+    pendingBalance,
+    handleViewNextDelivery,
+    handleBackToDeliveries,
+    handleBack,
+  } = useDeliveryComplete(navigation);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -29,7 +79,7 @@ export const DeliveryCompleteScreen: React.FC<DeliveryCompleteScreenProps> = ({ 
         <Text style={styles.errorText}>No completed delivery to show.</Text>
       ) : (
         <>
-          <View style={styles.content}>
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
             <View style={styles.iconOuter}>
               <View style={styles.iconInner}>
                 <Text style={styles.iconText}>✅</Text>
@@ -48,24 +98,52 @@ export const DeliveryCompleteScreen: React.FC<DeliveryCompleteScreenProps> = ({ 
                 <Text style={styles.receiptTime}>Completed at {summary.completedAt}</Text>
               </View>
               <View style={styles.receiptDivider} />
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptIcon}>🛢️</Text>
-                <Text style={styles.receiptLabel}>Cylinders Delivered</Text>
-                <Text style={styles.receiptValue}>{summary.deliveredQuantity}</Text>
-              </View>
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptIcon}>📦</Text>
-                <Text style={styles.receiptLabel}>Empties Collected</Text>
-                <Text style={styles.receiptValue}>{summary.emptyCollectedQuantity}</Text>
-              </View>
-              <View style={styles.receiptDivider} />
-              <View style={styles.receiptRow}>
-                <Text style={styles.receiptIcon}>💵</Text>
-                <Text style={styles.receiptLabel}>Payment Collected</Text>
-                <Text style={styles.receiptValuePayment}>{PLACEHOLDER_PAYMENT_COLLECTED}</Text>
-              </View>
+              <ReceiptItemsSection
+                title="Cylinders Delivered"
+                total={summary.deliveredQuantity}
+                items={deliveredItems}
+              />
+              <ReceiptItemsSection
+                title="Empty Cylinders Collected"
+                total={summary.emptyCollectedQuantity}
+                items={emptyItems}
+              />
+
+              {payment ? (
+                <>
+                  <View style={styles.receiptDivider} />
+                  <Text style={styles.receiptSectionTitle}>Payment Details</Text>
+                  <View style={styles.receiptRow}>
+                    <Text style={styles.receiptLabel}>Payment Mode</Text>
+                    <Text style={styles.receiptValueNeutral}>{PAYMENT_METHOD_LABEL[payment.method]}</Text>
+                  </View>
+                  <View style={styles.receiptRow}>
+                    <Text style={styles.receiptLabel}>Payment Status</Text>
+                    <View style={[styles.statusBadge, isPartial ? styles.statusBadgePartial : styles.statusBadgeFull]}>
+                      <Text
+                        style={[
+                          styles.statusBadgeText,
+                          isPartial ? styles.statusBadgeTextPartial : styles.statusBadgeTextFull,
+                        ]}
+                      >
+                        {PAYMENT_SPLIT_LABEL[payment.split]}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.receiptRow}>
+                    <Text style={styles.receiptLabel}>Amount Collected</Text>
+                    <Text style={styles.receiptValueNeutral}>{formatRupees(payment.amount)}</Text>
+                  </View>
+                  {isPartial ? (
+                    <View style={styles.receiptRow}>
+                      <Text style={styles.receiptLabel}>Pending Balance</Text>
+                      <Text style={styles.pendingValue}>{formatRupees(pendingBalance)}</Text>
+                    </View>
+                  ) : null}
+                </>
+              ) : null}
             </View>
-          </View>
+          </ScrollView>
 
           <View style={styles.footer}>
             <Button label="View Next Delivery" onPress={handleViewNextDelivery} size="md" />

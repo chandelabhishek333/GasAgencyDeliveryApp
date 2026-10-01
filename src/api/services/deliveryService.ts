@@ -1,7 +1,9 @@
 import { apiClient } from '../client';
 import { DELIVERY_ENDPOINTS } from '../endpoints/deliveryEndpoints';
+import { buildConfirmNote, toClockTime, toOrder, toOrders, unwrapResponse } from '../mappers/deliveryMappers';
+import type { ApiDelivery } from '../mappers/deliveryMappers';
+import { withDevMockFallback } from '../mocks/devFallback';
 import type {
-  ApiSuccessResponse,
   Delivery,
   DeliveryConfirmRequest,
   DeliveryConfirmResponse,
@@ -14,52 +16,67 @@ import type {
 /**
  * Delivery domain — today's assigned deliveries and the active
  * delivery workflow (location verify -> confirm quantities -> customer OTP).
+ * Responses go through src/api/mappers (live bare shapes and mock
+ * envelopes alike). In dev builds each call falls back to mock data if
+ * the real endpoint fails or is empty (see withDevMockFallback).
  */
 export const deliveryService = {
   async getTodayDeliveries(): Promise<Delivery[]> {
-    const response = await apiClient.get<ApiSuccessResponse<Delivery[]>>(
-      DELIVERY_ENDPOINTS.TODAY,
-    );
-    return response.data.data;
+    return withDevMockFallback('get', DELIVERY_ENDPOINTS.TODAY, async () => {
+      const response = await apiClient.get(DELIVERY_ENDPOINTS.TODAY);
+      return toOrders(response.data);
+    });
   },
 
   async getDeliveryById(deliveryId: string): Promise<Delivery> {
-    const response = await apiClient.get<ApiSuccessResponse<Delivery>>(
-      DELIVERY_ENDPOINTS.DETAIL(deliveryId),
-    );
-    return response.data.data;
+    return withDevMockFallback('get', DELIVERY_ENDPOINTS.DETAIL(deliveryId), async () => {
+      const response = await apiClient.get(DELIVERY_ENDPOINTS.DETAIL(deliveryId));
+      return toOrder(unwrapResponse<ApiDelivery | Delivery>(response.data));
+    });
   },
 
   async startDelivery(
     deliveryId: string,
     payload: DeliveryStartRequest,
   ): Promise<DeliveryStartResponse> {
-    const response = await apiClient.post<ApiSuccessResponse<DeliveryStartResponse>>(
-      DELIVERY_ENDPOINTS.START(deliveryId),
-      payload,
-    );
-    return response.data.data;
+    return withDevMockFallback('post', DELIVERY_ENDPOINTS.START(deliveryId), async () => {
+      const response = await apiClient.post(DELIVERY_ENDPOINTS.START(deliveryId), payload);
+      const data = unwrapResponse<{ isAtLocation: boolean; distanceMetersFromDestination: number | null }>(
+        response.data,
+      );
+      return {
+        isAtLocation: data.isAtLocation,
+        distanceMetersFromDestination: data.distanceMetersFromDestination ?? 0,
+      };
+    });
   },
 
+  // The live body is { deliveredQuantity, emptyCollectedQuantity, note }:
+  // the per-type breakdown has no field, and payment rides at the front
+  // of `note` until the API gets payment fields (see buildConfirmNote).
   async confirmDelivery(
     deliveryId: string,
     payload: DeliveryConfirmRequest,
   ): Promise<DeliveryConfirmResponse> {
-    const response = await apiClient.post<ApiSuccessResponse<DeliveryConfirmResponse>>(
-      DELIVERY_ENDPOINTS.CONFIRM(deliveryId),
-      payload,
-    );
-    return response.data.data;
+    return withDevMockFallback('post', DELIVERY_ENDPOINTS.CONFIRM(deliveryId), async () => {
+      const response = await apiClient.post(DELIVERY_ENDPOINTS.CONFIRM(deliveryId), {
+        deliveredQuantity: payload.deliveredQuantity,
+        emptyCollectedQuantity: payload.emptyCollectedQuantity,
+        note: buildConfirmNote(payload.notes, payload.payment),
+      });
+      const data = unwrapResponse<DeliveryConfirmResponse>(response.data);
+      return { deliveryId: data.deliveryId, customerOtpRequired: data.customerOtpRequired };
+    });
   },
 
   async verifyCustomerOtp(
     deliveryId: string,
     payload: VerifyCustomerOtpRequest,
   ): Promise<DeliverySummary> {
-    const response = await apiClient.post<ApiSuccessResponse<DeliverySummary>>(
-      DELIVERY_ENDPOINTS.VERIFY_CUSTOMER_OTP(deliveryId),
-      payload,
-    );
-    return response.data.data;
+    return withDevMockFallback('post', DELIVERY_ENDPOINTS.VERIFY_CUSTOMER_OTP(deliveryId), async () => {
+      const response = await apiClient.post(DELIVERY_ENDPOINTS.VERIFY_CUSTOMER_OTP(deliveryId), payload);
+      const data = unwrapResponse<DeliverySummary>(response.data);
+      return { ...data, completedAt: toClockTime(data.completedAt) };
+    });
   },
 };

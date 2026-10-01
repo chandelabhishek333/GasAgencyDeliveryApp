@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -27,13 +27,14 @@ export const styles = StyleSheet.create({
   },
   orderIdText: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.small,
     color: Colors.textLight,
   },
   customerCard: {
     backgroundColor: Colors.bgWhite,
     borderRadius: 14,
-    padding: Spacing.md,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#EAEFF5',
     shadowColor: '#000',
@@ -50,6 +51,7 @@ export const styles = StyleSheet.create({
   },
   customerName: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.bodySm,
     color: Colors.textSecondary,
   },
@@ -66,6 +68,7 @@ export const styles = StyleSheet.create({
   },
   customerPhone: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.footnote,
     color: Colors.secondary,
     marginBottom: 4,
@@ -86,48 +89,25 @@ export const styles = StyleSheet.create({
   },
   navigateChipText: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.primary,
   },
   sectionTitle: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.label,
     color: Colors.textSecondary,
     marginBottom: 6,
   },
   itemsList: {
-    gap: 6,
+    gap: 8,
   },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+  dateRow: {
     backgroundColor: Colors.bgCard,
     borderRadius: BorderRadius.md,
-    paddingVertical: 7,
-    paddingHorizontal: 9,
-  },
-  itemIcon: {
-    fontSize: 18,
-  },
-  itemInfo: {
-    flex: 1,
-  },
-  itemLabel: {
-    fontFamily: FontFamily.bold,
-    fontSize: FontSize.small,
-    color: Colors.textSecondary,
-  },
-  itemSub: {
-    fontFamily: FontFamily.regular,
-    fontSize: FontSize.caption1,
-    color: Colors.textLight,
-  },
-  slotRow: {
-    paddingVertical: 6,
-  },
-  slotIcon: {
-    fontSize: FontSize.subheading,
+    paddingVertical: 10,
+    paddingHorizontal: 11,
   },
   slotText: {
     fontFamily: FontFamily.medium,
@@ -136,11 +116,12 @@ export const styles = StyleSheet.create({
   },
   slotTextBold: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
   },
   noteCard: {
     backgroundColor: Colors.bgWhite,
     borderRadius: 14,
-    padding: Spacing.md,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#EAEFF5',
     gap: 6,
@@ -152,6 +133,7 @@ export const styles = StyleSheet.create({
   },
   noteAddress: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.small,
     color: Colors.textSecondary,
   },
@@ -164,7 +146,7 @@ export const styles = StyleSheet.create({
   billCard: {
     backgroundColor: Colors.bgWhite,
     borderRadius: 14,
-    padding: Spacing.md,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#EAEFF5',
     gap: 8,
@@ -179,42 +161,20 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  billLabel: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: FontSize.footnote,
-    color: Colors.textMuted,
-  },
-  billValue: {
-    fontFamily: FontFamily.bold,
-    fontSize: FontSize.footnote,
-    color: Colors.textSecondary,
-  },
-  billLineLabel: {
-    fontFamily: FontFamily.regular,
-    fontSize: FontSize.caption1,
-    color: Colors.textLight,
-  },
-  billLineValue: {
-    fontFamily: FontFamily.medium,
-    fontSize: FontSize.caption1,
-    color: Colors.textMuted,
-  },
-  billDivider: {
-    height: 1,
-    backgroundColor: Colors.divider,
-  },
   billTotalLabel: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.label,
     color: Colors.textSecondary,
   },
   billTotalValue: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subheading,
     color: Colors.successGreen,
   },
   footer: {
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.xs,
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
   },

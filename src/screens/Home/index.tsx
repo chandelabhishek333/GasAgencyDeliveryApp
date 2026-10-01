@@ -24,11 +24,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     initials,
     greeting,
     todayDate,
+    nextDeliveryDate,
     isInitialLoading,
     error,
     stats,
     nextDelivery,
-    nextDeliverySummary,
+    cylinderRows,
     vehicleStock,
     shiftSummary,
     handleToggleDuty,
@@ -94,16 +95,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {/* Today's Deliveries */}
           <View style={styles.card}>
             <View style={styles.cardHeaderRow}>
-              <View style={styles.cardHeaderLeft}>
-                <View style={styles.todayIconBox}>
-                  <Text style={styles.todayIconText}>📊</Text>
-                </View>
-                <View>
-                  <Text style={styles.todayLabel}>Today's Deliveries</Text>
-                  <View style={styles.todayCountRow}>
-                    <Text style={styles.todayCount}>{stats.total}</Text>
-                    <Text style={styles.todayCountUnit}>Orders</Text>
-                  </View>
+              <View>
+                <Text style={styles.todayLabel}>Today's Deliveries</Text>
+                <View style={styles.todayCountRow}>
+                  <Text style={styles.todayCount}>{stats.total}</Text>
+                  <Text style={styles.todayCountUnit}>Orders</Text>
                 </View>
               </View>
               <Text style={styles.dateBadge}>{todayDate}</Text>
@@ -122,31 +118,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           {/* Vehicle Cylinder Stock */}
           <View style={styles.vehicleGrid}>
             <View style={styles.vehicleCell}>
-              <View style={[styles.vehicleIconBox, styles.vehicleIconTruck]}>
-                <Text style={styles.vehicleIconText}>🚚</Text>
-              </View>
-              <View>
-                <Text style={styles.vehicleLabel}>Truck Full Stock</Text>
-                <View style={styles.vehicleValueRow}>
-                  <Text style={[styles.vehicleValue, styles.vehicleValueBlue]}>
-                    {vehicleStock.truckFullStock} / {vehicleStock.truckCapacity}
-                  </Text>
-                  <Text style={styles.vehicleUnit}>Cyl</Text>
-                </View>
+              <Text style={styles.vehicleLabel}>Truck Full Stock</Text>
+              <View style={styles.vehicleValueRow}>
+                <Text style={[styles.vehicleValue, styles.vehicleValueBlue]}>
+                  {vehicleStock.truckFullStock ?? '—'}
+                  {vehicleStock.truckCapacity !== undefined ? ` / ${vehicleStock.truckCapacity}` : ''}
+                </Text>
+                <Text style={styles.vehicleUnit}>Cyl</Text>
               </View>
             </View>
             <View style={styles.vehicleCell}>
-              <View style={[styles.vehicleIconBox, styles.vehicleIconBox2]}>
-                <Text style={styles.vehicleIconText}>📦</Text>
-              </View>
-              <View>
-                <Text style={styles.vehicleLabel}>Empty Collected</Text>
-                <View style={styles.vehicleValueRow}>
-                  <Text style={[styles.vehicleValue, styles.vehicleValueAmber]}>
-                    {String(vehicleStock.emptyCollected).padStart(2, '0')}
-                  </Text>
-                  <Text style={styles.vehicleUnit}>Units</Text>
-                </View>
+              <Text style={styles.vehicleLabel}>Empty Collected</Text>
+              <View style={styles.vehicleValueRow}>
+                <Text style={[styles.vehicleValue, styles.vehicleValueAmber]}>
+                  {vehicleStock.emptyCollected !== null ? String(vehicleStock.emptyCollected).padStart(2, '0') : '—'}
+                </Text>
+                <Text style={styles.vehicleUnit}>Units</Text>
               </View>
             </View>
           </View>
@@ -157,27 +144,33 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               <Pressable onPress={handleNextDeliveryPress}>
                 <View style={styles.nextTopRow}>
                   <View style={styles.nextPill}>
-                    <Text style={styles.nextPillText}>▶ NEXT DELIVERY</Text>
+                    <Text style={styles.nextPillText}>NEXT DELIVERY</Text>
                   </View>
-                  <Text style={styles.nextSlot}>Slot: {nextDelivery.timeSlotStart}</Text>
+                  <Text style={styles.nextDate}>{nextDeliveryDate}</Text>
                 </View>
-                <View style={styles.nextBottomRow}>
-                  <View style={styles.nextInfo}>
-                    <Text style={styles.nextTitle}>
-                      {nextDelivery.customerName} (#{nextDelivery.orderNumber})
-                    </Text>
-                    <Text style={styles.nextAddress}>
-                      📍 {nextDelivery.address}
-                      {nextDelivery.distanceKm !== undefined ? ` • ${nextDelivery.distanceKm} km away` : ''}
-                    </Text>
-                    {nextDeliverySummary ? (
-                      <Text style={styles.nextItemsLine}>{nextDeliverySummary}</Text>
-                    ) : null}
-                  </View>
+                <View style={styles.nextHeaderRow}>
+                  <Text style={styles.nextTitle}>
+                    {nextDelivery.customerName} (#{nextDelivery.orderNumber})
+                  </Text>
                   <View style={styles.nextArrowButton}>
                     <Text style={styles.nextArrowText}>➤</Text>
                   </View>
                 </View>
+                <Text style={styles.nextAddress}>
+                  📍 {nextDelivery.address}
+                  {nextDelivery.distanceKm !== undefined ? ` • ${nextDelivery.distanceKm} km away` : ''}
+                </Text>
+                {cylinderRows.length > 0 ? (
+                  <View style={styles.cylinderRowsContainer}>
+                    {cylinderRows.map((row) => (
+                      <View key={row.key} style={styles.cylinderRow}>
+                        <Text style={styles.cylinderDeliveryText}>{row.delivery ?? ''}</Text>
+                        {/* Always rendered (even when empty) so every row's collect column starts at the same x. */}
+                        <Text style={styles.cylinderCollectText}>{row.collect ?? ''}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
               </Pressable>
             ) : (
               <Text style={styles.emptyNextText}>🎉 No upcoming deliveries right now.</Text>
@@ -189,17 +182,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Text style={styles.shiftTitle}>Shift Performance / Summary</Text>
             <View style={styles.shiftGrid}>
               <View style={styles.shiftCell}>
-                <Text style={styles.shiftIcon}>📍</Text>
                 <Text style={styles.shiftValue}>{shiftSummary.distanceCovered}</Text>
                 <Text style={styles.shiftLabel}>Covered</Text>
               </View>
               <View style={[styles.shiftCell, styles.shiftCellDivider]}>
-                <Text style={styles.shiftIcon}>⏱️</Text>
                 <Text style={styles.shiftValue}>{shiftSummary.timeOnRoad}</Text>
                 <Text style={styles.shiftLabel}>On Road</Text>
               </View>
               <View style={styles.shiftCell}>
-                <Text style={styles.shiftIcon}>💵</Text>
                 <Text style={styles.shiftValue}>{shiftSummary.cashToCollect}</Text>
                 <Text style={styles.shiftLabel}>COD Pending</Text>
               </View>
@@ -210,7 +200,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           <View style={styles.bottomGroup}>
           {/* Safety Banner */}
           <View style={styles.safetyBanner}>
-            <Text style={styles.safetyIcon}>✅</Text>
             <Text style={styles.safetyText}>
               Complete deliveries safely • <Text style={styles.safetyBold}>Drive Safe. Deliver Happiness.</Text>
             </Text>

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   // Values below are confirmed via the reference mockup. marginBottom
@@ -26,11 +26,13 @@ export const styles = StyleSheet.create({
   backIcon: {
     fontSize: FontSize.heading,
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     color: Colors.textDark,
   },
   title: {
     flex: 1,
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.subheading,
     color: Colors.textSecondary,
   },
@@ -45,6 +47,7 @@ export const styles = StyleSheet.create({
   },
   rightLabel: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.subtitle,
     color: Colors.primary,
   },

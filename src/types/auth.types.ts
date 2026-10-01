@@ -60,6 +60,12 @@ export interface RequestOtpApiResponse {
   dev_otp?: string;
 }
 
+/** POST /otp/resend — only the in-flight `request_id` + device; no mobile number or country code. */
+export interface ResendOtpApiRequest {
+  request_id: string;
+  device: ApiDeviceInfo;
+}
+
 export interface VerifyOtpApiRequest {
   request_id: string;
   mobile_number: string;

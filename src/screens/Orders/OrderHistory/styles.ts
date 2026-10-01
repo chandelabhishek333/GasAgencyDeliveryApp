@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -32,11 +32,13 @@ export const styles = StyleSheet.create({
   },
   tabTextActive: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.small,
     color: Colors.white,
   },
   tabTextInactive: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.small,
     color: Colors.textMuted,
   },
@@ -71,12 +73,14 @@ export const styles = StyleSheet.create({
   },
   orderId: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subtitle,
     color: Colors.textDark,
   },
   customerName: {
     flexShrink: 1,
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.body,
     color: Colors.textDark,
   },
@@ -96,6 +100,7 @@ export const styles = StyleSheet.create({
   },
   itemChipText: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.textMuted,
   },

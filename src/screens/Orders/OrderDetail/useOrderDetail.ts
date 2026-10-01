@@ -40,7 +40,8 @@ export const useOrderDetail = (
     }
   };
 
-  const handleStartDelivery = (): void => {
+  // "Out for Delivery": starts the active-delivery flow at location verification.
+  const handleOutForDelivery = (): void => {
     if (order) {
       dispatch(setActiveDelivery(order));
       navigation.navigate(ROUTES.ACTIVE_DELIVERY);
@@ -54,6 +55,6 @@ export const useOrderDetail = (
     handleBack: () => navigation.goBack(),
     handleCallPress,
     handleNavigatePress,
-    handleStartDelivery,
+    handleOutForDelivery,
   };
 };

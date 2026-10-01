@@ -1,19 +1,23 @@
 import React from 'react';
-import { FlatList, Pressable, StatusBar, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, StatusBar, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Loader } from '../../../components/common/Loader';
 import { OrderCard } from '../../../components/delivery/OrderCard';
 import { Colors } from '../../../theme';
+import { ORDER_STATUS_LABEL } from '../../../utils/orderStatusMeta';
 import { styles } from './styles';
 import { useOrderList } from './useOrderList';
 import type { OrderListScreenProps } from './types';
 import type { OrderStatusFilter } from '../../../store/slices/ordersSlice';
 import type { Order } from '../../../types';
 
-const FILTER_TABS: Array<{ key: OrderStatusFilter; label: (n: { all: number; pending: number; inProgress: number }) => string }> = [
+type StatusCounts = { all: number; pending: number; inProgress: number; completed: number };
+
+const FILTER_TABS: Array<{ key: OrderStatusFilter; label: (n: StatusCounts) => string }> = [
   { key: 'all', label: (n) => `All (${n.all})` },
   { key: 'pending', label: (n) => `Pending (${n.pending})` },
-  { key: 'in_progress', label: (n) => `In Progress (${n.inProgress})` },
+  { key: 'in_progress', label: (n) => `${ORDER_STATUS_LABEL.in_progress} (${n.inProgress})` },
+  { key: 'completed', label: (n) => `${ORDER_STATUS_LABEL.completed} (${n.completed})` },
 ];
 
 /** Screen 5 — Today's Deliveries: search + status filter tabs + order list. */
@@ -48,7 +52,13 @@ export const OrderListScreen: React.FC<OrderListScreenProps> = ({ navigation }) 
           />
         </View>
 
-        <View style={styles.tabsRow}>
+        {/* Four tabs don't fit one row on a phone — scroll sideways rather than wrap or shrink the text. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsScroll}
+          contentContainerStyle={styles.tabsRow}
+        >
           {FILTER_TABS.map((tab) => {
             const isActive = statusFilter === tab.key;
             return (
@@ -63,7 +73,7 @@ export const OrderListScreen: React.FC<OrderListScreenProps> = ({ navigation }) 
               </Pressable>
             );
           })}
-        </View>
+        </ScrollView>
 
         {isInitialLoading ? (
           <Loader label="Loading deliveries..." />

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subheading,
     color: Colors.textSecondary,
     textAlign: 'center',
@@ -41,15 +42,31 @@ export const styles = StyleSheet.create({
     color: Colors.textSecondary,
     padding: 0,
   },
-  tabsRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
+  // flexGrow: 0 stops the horizontal ScrollView from stretching vertically,
+  // and flexShrink: 0 stops it being squeezed: ScrollView defaults to
+  // flexShrink: 1, so the long order list below was shrinking this strip a
+  // few dp, which capped the tab text's height and cut off its descenders.
+  // The negative margin cancels `content`'s side padding so the tabs scroll
+  // from screen edge to screen edge instead of being cut at the padding;
+  // tabsRow's matching padding keeps "All" aligned with the rest of the screen.
+  tabsScroll: {
+    flexGrow: 0,
+    flexShrink: 0,
+    marginHorizontal: -Spacing.lg,
     marginBottom: Spacing.md,
   },
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+  },
   tab: {
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: BorderRadius.round,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
   },
   tabActive: {
     backgroundColor: Colors.primary,
@@ -57,14 +74,22 @@ export const styles = StyleSheet.create({
   tabInactive: {
     backgroundColor: Colors.bgLight,
   },
+  // Explicit lineHeight + no extra font padding so Inter's descenders
+  // ("g" in Pending, "y" in Delivery) aren't clipped inside the pill on Android.
   tabTextActive: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.footnote,
+    lineHeight: 18,
+    includeFontPadding: false,
     color: Colors.white,
   },
   tabTextInactive: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.footnote,
+    lineHeight: 18,
+    includeFontPadding: false,
     color: Colors.textMuted,
   },
   listContent: {

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, LetterSpacing, LineHeight, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, LetterSpacing, LineHeight, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -21,6 +21,7 @@ export const styles = StyleSheet.create({
   },
   wordmark: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.display + 1.5,
     color: Colors.primary,
     letterSpacing: LetterSpacing.wide,
@@ -29,6 +30,7 @@ export const styles = StyleSheet.create({
   },
   subLabel: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.label + 1.5,
     color: Colors.textMuted,
     letterSpacing: LetterSpacing.wider,
@@ -38,6 +40,7 @@ export const styles = StyleSheet.create({
   },
   tagline: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.heading + 1.5,
     color: Colors.secondary,
     textAlign: 'center',
@@ -71,17 +74,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  dotActive: {
-    width: 20,
-    height: 6,
+  // Size + color are animated per dot in index.tsx (the sequential wave).
+  dot: {
     borderRadius: BorderRadius.round,
-    backgroundColor: Colors.secondary,
-  },
-  dotInactive: {
-    width: 5,
-    height: 5,
-    borderRadius: BorderRadius.round,
-    backgroundColor: '#C8D5E0',
   },
   version: {
     textAlign: 'center',

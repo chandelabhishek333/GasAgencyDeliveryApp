@@ -1,18 +1,20 @@
 # dependencies
 node_modules/
 
-# expo (to be removed during migration, ignored meanwhile)
-.expo/
-.expo-shared/
-
-# native build outputs (once android/ exists)
+# native build outputs
 android/app/build/
 android/build/
 android/.gradle/
 android/local.properties
 android/app/.cxx/
+android/app/src/main/assets/fonts/
 *.keystore
 !debug.keystore
+
+# metro/watchman
+.metro-health-check*
+*.jsbundle
+buck-out/
 
 # env
 .env

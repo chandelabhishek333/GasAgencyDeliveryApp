@@ -1,12 +1,22 @@
 /**
  * MBGA Design System — Typography Tokens
  *
- * Font family: Inter, loaded via @expo-google-fonts/inter and
- * App.tsx's `useFonts` call (see App.tsx). Reference weights by
+ * Font family: Inter, statically linked as a native asset (see
+ * src/assets/fonts + react-native.config.js) — these family-name
+ * strings are the actual embedded PostScript names in those .ttf
+ * files. Reference weights by
  * `FontFamily.<weight>` rather than passing `fontWeight` directly —
  * each of these is a real distinct font file, not a synthetic
  * fontWeight on a single regular face, so "black" actually renders
  * heavier than "bold" on both platforms.
+ *
+ * Styles using semiBold and heavier also set the matching
+ * `FontWeight.<weight>`. On Android, RN resolves any `fontWeight >= 700`
+ * to the asset `fonts/<family>_bold.ttf` (falling back to system Roboto
+ * if it's missing), so android/app/src/main/assets/fonts ships
+ * `Inter_700Bold_bold.ttf`, `Inter_800ExtraBold_bold.ttf` and
+ * `Inter_900Black_bold.ttf` as byte-identical copies of the base files.
+ * Keep those copies in place, or drop the fontWeight on those styles.
  */
 export const FontFamily = {
   regular: 'Inter_400Regular',
@@ -18,8 +28,7 @@ export const FontFamily = {
 } as const;
 
 /**
- * Numeric fallback for platforms/components that require a `fontWeight`
- * string alongside `fontFamily` (e.g. web preview, third-party libs).
+ * Numeric weights paired with `FontFamily` in styles (see note above).
  */
 export const FontWeight = {
   regular: '400',

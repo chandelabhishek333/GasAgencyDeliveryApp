@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchProfile } from '../../../store/slices/userSlice';
-import { logoutUser } from '../../../store/slices/authSlice';
+import { logoutAll, logoutUser } from '../../../store/slices/authSlice';
 import { selectProfile, selectProfileStatus } from '../../../store/selectors/userSelectors';
 import { selectAccountStatus, selectDriver } from '../../../store/selectors/authSelectors';
 import { getInitials } from '../../../utils/getInitials';
@@ -18,6 +19,7 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
   const profile = useAppSelector(selectProfile);
   const status = useAppSelector(selectProfileStatus);
   const accountStatus = useAppSelector(selectAccountStatus);
+  const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
   useEffect(() => {
     dispatch(fetchProfile());
@@ -31,6 +33,25 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
     await dispatch(logoutUser());
     // authSlice resets to a logged-out state; RootNavigator swaps back
     // to AuthStack automatically — no explicit navigation call here.
+  };
+
+  const confirmLogoutAll = async (): Promise<void> => {
+    setIsLoggingOutAll(true);
+    try {
+      await dispatch(logoutAll()).unwrap();
+      // Every slice resets (see store/index.ts) and RootNavigator swaps
+      // back to AuthStack, unmounting this screen — nothing more to do.
+    } catch (error) {
+      setIsLoggingOutAll(false);
+      Alert.alert('Sign out failed', typeof error === 'string' ? error : 'Please try again.');
+    }
+  };
+
+  const handleLogoutAll = (): void => {
+    Alert.alert('Sign Out of All Devices', 'Are you sure you want to sign out from all devices?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: confirmLogoutAll },
+    ]);
   };
 
   return {
@@ -49,5 +70,7 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
     handleDeliveryHistory: () => navigation.navigate(ROUTES.ORDER_HISTORY),
     handleHelpSupport: () => navigation.navigate(ROUTES.SUPPORT),
     handleLogout,
+    handleLogoutAll,
+    isLoggingOutAll,
   };
 };

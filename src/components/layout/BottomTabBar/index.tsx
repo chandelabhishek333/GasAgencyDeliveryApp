@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../../theme';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
-import { fetchNotifications } from '../../../store/slices/notificationsSlice';
-import { selectUnreadCount } from '../../../store/selectors/notificationsSelectors';
+import { fetchNotifications, fetchUnreadCount } from '../../../store/slices/notificationsSlice';
+import { selectBadgeUnreadCount } from '../../../store/selectors/notificationsSelectors';
 import { styles } from './styles';
 import type { BottomTabBarProps, TabKey } from './types';
 
@@ -39,10 +40,8 @@ const TAB_ITEMS: TabItem[] = [
   {
     key: 'notifications',
     label: 'Notifications',
-    // A bell reads as "notifications" but duplicates the badge icon
-    // Home used to own — an inbox/mail glyph avoids that repetition.
     renderIcon: (color, focused) => (
-      <Ionicons name={focused ? 'mail' : 'mail-outline'} size={ICON_SIZE} color={color} />
+      <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={ICON_SIZE} color={color} />
     ),
   },
   {
@@ -62,15 +61,17 @@ const TAB_ITEMS: TabItem[] = [
  *
  * Also owns the notifications fetch: it's mounted for the whole
  * authenticated session, so it's the natural place to keep the unread
- * badge fresh, independent of whichever tab is currently focused.
+ * badge fresh (from the server's unread-count endpoint), independent of
+ * whichever tab is currently focused.
  */
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({ activeKey, onTabPress, testID }) => {
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
-  const unreadCount = useAppSelector(selectUnreadCount);
+  const unreadCount = useAppSelector(selectBadgeUnreadCount);
 
   useEffect(() => {
     dispatch(fetchNotifications());
+    dispatch(fetchUnreadCount());
   }, [dispatch]);
 
   return (

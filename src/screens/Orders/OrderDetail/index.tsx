@@ -1,10 +1,14 @@
 import React from 'react';
 import { Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../../components/layout/Header';
 import { Badge } from '../../../components/common/Badge';
 import { Button } from '../../../components/common/Button';
 import { Loader } from '../../../components/common/Loader';
+import { OrderItemGroup } from '../../../components/delivery/OrderItemGroup';
+import { PLACEHOLDER_DROPOFF_NOTE } from '../../../constants/placeholders';
+import { formatRupees } from '../../../utils/formatRupees';
+import { formatDeliveryDate } from '../../../utils/formatShortDate';
+import { getPayableAmount } from '../../../utils/getPayableAmount';
 import { ORDER_STATUS_BADGE_VARIANT, ORDER_STATUS_LABEL } from '../../../utils/orderStatusMeta';
 import { Colors } from '../../../theme';
 import { styles } from './styles';
@@ -12,26 +16,16 @@ import { useOrderDetail } from './useOrderDetail';
 import type { OrderDetailScreenProps } from './types';
 
 /**
- * Illustrative delivery-instructions and bill data — `Order`
- * (src/types/order.types.ts) has no drop-off-note or payment/bill
- * fields yet. Swap for real data once the backend exposes them.
- */
-const PLACEHOLDER_DROPOFF_NOTE = 'Commercial Kitchen Entry — call supervisor on arrival.';
-const PLACEHOLDER_BILL = {
-  paymentMode: 'Cash on Delivery (COD)',
-  totalAmount: '₹14,250',
-  lines: [
-    { label: 'Cylinder Charges', value: '₹13,500' },
-    { label: 'GST (18%)', value: '₹750' },
-  ],
-};
-
-/**
  * Screen 6 — Order Details. The reference mockup hardcodes a green
  * "Pending Delivery" badge regardless of status — a real detail
  * screen must reflect the order's actual status, so this derives the
  * badge from `order.status` via the shared ORDER_STATUS_* maps
  * instead (a pending order here renders the orange "Pending" pill).
+ *
+ * Root is a plain View, not a bottom-edge SafeAreaView: this screen sits
+ * inside MainTabNavigator, whose BottomTabBar already pads for the
+ * system nav bar — a second bottom inset here left a ~50dp gap between
+ * the footer button and the tabs.
  */
 export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation, route }) => {
   const {
@@ -41,14 +35,14 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
     handleBack,
     handleCallPress,
     handleNavigatePress,
-    handleStartDelivery,
+    handleOutForDelivery,
   } = useOrderDetail(navigation, route);
 
-  const cylinderItem = order?.items.find((item) => item.kind === 'cylinderDelivery');
-  const emptyItem = order?.items.find((item) => item.kind === 'emptyCollection');
+  const cylinderItems = order?.items.filter((item) => item.kind === 'cylinderDelivery') ?? [];
+  const emptyItems = order?.items.filter((item) => item.kind === 'emptyCollection') ?? [];
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bgWhite} />
       <Header
         title="Order Details"
@@ -94,40 +88,31 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
                 accessibilityRole="button"
                 style={styles.navigateChip}
               >
-                <Text style={styles.navigateChipText}>🧭 Navigate to Location</Text>
+                <Text style={styles.navigateChipText}>Navigate to Location</Text>
               </Pressable>
             </View>
 
             <View>
               <Text style={styles.sectionTitle}>Order Items</Text>
               <View style={styles.itemsList}>
-                {cylinderItem ? (
-                  <View style={styles.itemRow}>
-                    <Text style={styles.itemIcon}>🛢️</Text>
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemLabel}>{cylinderItem.label}</Text>
-                      <Text style={styles.itemSub}>Qty: {cylinderItem.quantity}</Text>
-                    </View>
-                  </View>
+                {cylinderItems.length > 0 ? (
+                  <OrderItemGroup title="Cylinders to Deliver" items={cylinderItems} />
                 ) : null}
-                {emptyItem ? (
-                  <View style={styles.itemRow}>
-                    <Text style={styles.itemIcon}>📦</Text>
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemLabel}>{emptyItem.label}</Text>
-                      <Text style={styles.itemSub}>Qty: {emptyItem.quantity} (Expected)</Text>
-                    </View>
-                  </View>
+                {emptyItems.length > 0 ? (
+                  <OrderItemGroup
+                    title="Empty Cylinders to Collect"
+                    items={emptyItems}
+                    qtySuffix="(Expected)"
+                  />
                 ) : null}
-                <View style={[styles.itemRow, styles.slotRow]}>
-                  <Text style={styles.slotIcon}>🕒</Text>
-                  <Text style={styles.slotText}>
-                    Delivery Time Slot:{' '}
-                    <Text style={styles.slotTextBold}>
-                      {order.timeSlotStart} - {order.timeSlotEnd}
+                {order.deliveryDate ? (
+                  <View style={styles.dateRow}>
+                    <Text style={styles.slotText}>
+                      Delivery Date:{' '}
+                      <Text style={styles.slotTextBold}>{formatDeliveryDate(order.deliveryDate)}</Text>
                     </Text>
-                  </Text>
-                </View>
+                  </View>
+                ) : null}
               </View>
             </View>
 
@@ -143,30 +128,18 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
               <Text style={styles.sectionTitle}>Bill & Payment Details</Text>
               <View style={styles.billCard}>
                 <View style={styles.billRow}>
-                  <Text style={styles.billLabel}>Payment Mode</Text>
-                  <Text style={styles.billValue}>{PLACEHOLDER_BILL.paymentMode}</Text>
-                </View>
-                <View style={styles.billDivider} />
-                {PLACEHOLDER_BILL.lines.map((line) => (
-                  <View key={line.label} style={styles.billRow}>
-                    <Text style={styles.billLineLabel}>{line.label}</Text>
-                    <Text style={styles.billLineValue}>{line.value}</Text>
-                  </View>
-                ))}
-                <View style={styles.billDivider} />
-                <View style={styles.billRow}>
-                  <Text style={styles.billTotalLabel}>Total Amount</Text>
-                  <Text style={styles.billTotalValue}>{PLACEHOLDER_BILL.totalAmount}</Text>
+                  <Text style={styles.billTotalLabel}>Payable Amount</Text>
+                  <Text style={styles.billTotalValue}>{formatRupees(getPayableAmount(order))}</Text>
                 </View>
               </View>
             </View>
           </ScrollView>
 
           <View style={styles.footer}>
-            <Button label="Start Delivery" onPress={handleStartDelivery} size="lg" />
+            <Button label="Out for Delivery" onPress={handleOutForDelivery} size="lg" />
           </View>
         </>
       )}
-    </SafeAreaView>
+    </View>
   );
 };

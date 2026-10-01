@@ -12,8 +12,25 @@ export const MOCK_DRIVER: Driver = {
 
 const buildItems = (id: string, quantity: number): OrderItem[] => [
   { id: `${id}-cylinder`, kind: 'cylinderDelivery', label: '19 KG Cylinder', quantity },
-  { id: `${id}-empty`, kind: 'emptyCollection', label: 'Empty Cylinders to Collect', quantity },
+  { id: `${id}-empty`, kind: 'emptyCollection', label: '19 KG Empty', quantity },
 ];
+
+/** Mixed-size order (19 KG + 47.5 KG) — exercises Order Detail's multi-cylinder layout. */
+const buildMixedItems = (id: string, commercial: number, industrial: number): OrderItem[] => [
+  { id: `${id}-cylinder-19`, kind: 'cylinderDelivery', label: '19 KG Commercial', quantity: commercial },
+  { id: `${id}-cylinder-47`, kind: 'cylinderDelivery', label: '47.5 KG Industrial', quantity: industrial },
+  { id: `${id}-empty-19`, kind: 'emptyCollection', label: '19 KG Empty', quantity: commercial },
+  { id: `${id}-empty-47`, kind: 'emptyCollection', label: '47.5 KG Empty', quantity: industrial },
+];
+
+/**
+ * Today's local date as ISO "YYYY-MM-DD" (the API's format) — computed,
+ * not frozen, so these "today's deliveries" always match the dashboard's
+ * date badge, whenever the app is opened.
+ */
+const toLocalIsoDate = (date: Date): string =>
+  [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((part) => String(part).padStart(2, '0')).join('-');
+const MOCK_DELIVERY_DATE = toLocalIsoDate(new Date());
 
 /**
  * 12 orders matching the dashboard's "12 Orders / 8 Pending / 2 In
@@ -30,9 +47,10 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 61, Noida',
     timeSlotStart: '10:50 AM',
     timeSlotEnd: '12:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 1.8,
-    items: buildItems('ORD1256', 5),
+    items: buildMixedItems('ORD1256', 5, 2),
   },
   {
     id: 'ORD1257',
@@ -42,9 +60,10 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Indirapuram, Ghaziabad',
     timeSlotStart: '10:30 AM',
     timeSlotEnd: '12:30 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 3.2,
-    items: buildItems('ORD1257', 4),
+    items: buildMixedItems('ORD1257', 4, 2),
   },
   {
     id: 'ORD1258',
@@ -54,6 +73,7 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 18, Noida',
     timeSlotStart: '12:00 PM',
     timeSlotEnd: '1:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 2.1,
     items: buildItems('ORD1258', 6),
@@ -66,6 +86,7 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 50, Noida',
     timeSlotStart: '09:00 AM',
     timeSlotEnd: '10:00 AM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'in_progress',
     distanceKm: 0.9,
     items: buildItems('ORD1259', 3),
@@ -78,6 +99,7 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 63, Noida',
     timeSlotStart: '1:00 PM',
     timeSlotEnd: '2:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 4.5,
     items: buildItems('ORD1260', 8),
@@ -90,6 +112,7 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 15, Noida',
     timeSlotStart: '2:00 PM',
     timeSlotEnd: '3:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 2.7,
     items: buildItems('ORD1261', 5),
@@ -102,6 +125,7 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 76, Noida',
     timeSlotStart: '3:00 PM',
     timeSlotEnd: '4:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 5.3,
     items: buildItems('ORD1262', 3),
@@ -114,6 +138,7 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 44, Noida',
     timeSlotStart: '11:00 AM',
     timeSlotEnd: '12:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'in_progress',
     distanceKm: 1.4,
     items: buildItems('ORD1263', 6),
@@ -126,6 +151,7 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 137, Noida',
     timeSlotStart: '4:00 PM',
     timeSlotEnd: '5:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 6.1,
     items: buildItems('ORD1264', 4),
@@ -138,9 +164,10 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 62, Noida',
     timeSlotStart: '5:00 PM',
     timeSlotEnd: '6:00 PM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'pending',
     distanceKm: 2.9,
-    items: buildItems('ORD1265', 5),
+    items: buildMixedItems('ORD1265', 3, 2),
   },
   {
     id: 'ORD1253',
@@ -150,10 +177,12 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 18, Noida',
     timeSlotStart: '09:00 AM',
     timeSlotEnd: '10:00 AM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'completed',
     distanceKm: 2.0,
     items: buildItems('ORD1253', 5),
     completedAt: '10:15 AM',
+    payment: { method: 'cash', split: 'full', amount: 14250, payableAmount: 14250 },
   },
   {
     id: 'ORD1254',
@@ -163,10 +192,12 @@ export const MOCK_TODAY_DELIVERIES: Delivery[] = [
     address: 'Sector 50, Noida',
     timeSlotStart: '10:00 AM',
     timeSlotEnd: '11:00 AM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'completed',
     distanceKm: 1.2,
     items: buildItems('ORD1254', 7),
     completedAt: '11:20 AM',
+    payment: { method: 'upiQr', split: 'partial', amount: 10000, payableAmount: 14250 },
   },
 ];
 
@@ -182,10 +213,12 @@ export const MOCK_ORDER_HISTORY: Order[] = [
     address: 'Sector 16, Noida',
     timeSlotStart: '08:30 AM',
     timeSlotEnd: '09:30 AM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'completed',
     distanceKm: 1.6,
     items: buildItems('ORD1252', 5),
     completedAt: '09:30 AM',
+    payment: { method: 'upiQr', split: 'full', amount: 14250, payableAmount: 14250 },
   },
   {
     id: 'ORD1251',
@@ -195,10 +228,12 @@ export const MOCK_ORDER_HISTORY: Order[] = [
     address: 'Sector 12, Noida',
     timeSlotStart: '08:00 AM',
     timeSlotEnd: '09:00 AM',
+    deliveryDate: MOCK_DELIVERY_DATE,
     status: 'completed',
     distanceKm: 2.4,
     items: buildItems('ORD1251', 5),
     completedAt: '08:45 AM',
+    payment: { method: 'cash', split: 'partial', amount: 8000, payableAmount: 14250 },
   },
 ];
 

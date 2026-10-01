@@ -28,7 +28,7 @@ export const selectFilteredOrders = createSelector(
   },
 );
 
-/** Screen 5's filter-tab counts: "All (12)", "Pending (8)", "In Progress (2)". */
+/** Screen 5's filter-tab counts: "All (12)", "Pending (8)", "Out for Delivery (2)", "Completed (2)". */
 export const selectOrderStatusCounts = createSelector(selectOrders, (orders) => ({
   all: orders.length,
   pending: orders.filter((order) => order.status === 'pending').length,

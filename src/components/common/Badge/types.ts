@@ -1,6 +1,6 @@
 import type { StyleProp, ViewStyle } from 'react-native';
 
-export type BadgeVariant = 'pending' | 'inProgress' | 'completed' | 'delivered' | 'info';
+export type BadgeVariant = 'pending' | 'inProgress' | 'completed' | 'failed' | 'delivered' | 'info';
 export type BadgeSize = 'sm' | 'md';
 
 export interface BadgeProps {

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -10,7 +10,7 @@ export const styles = StyleSheet.create({
     // (see Home/styles.ts) — kept raw since it isn't promoted to a
     // theme token there either.
     borderColor: '#EAEFF5',
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     paddingHorizontal: Spacing.md,
     marginBottom: 10,
     gap: Spacing.sm,
@@ -27,31 +27,16 @@ export const styles = StyleSheet.create({
   },
   orderNumber: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subtitle,
     color: Colors.textSecondary,
   },
-  bodyRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconText: {
-    fontSize: FontSize.subheading,
-  },
-  bodyInfo: {
-    flex: 1,
-    gap: 2,
-    justifyContent: 'center',
+  body: {
+    gap: 3,
   },
   customerName: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.body,
     color: Colors.textDark,
   },

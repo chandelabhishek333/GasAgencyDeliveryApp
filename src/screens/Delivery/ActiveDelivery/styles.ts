@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -14,6 +14,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.subheading,
     color: Colors.textDark,
     textAlign: 'center',
@@ -88,12 +89,14 @@ export const styles = StyleSheet.create({
   },
   mapLabelText: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.textDark,
   },
 
   successText: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.small,
     color: Colors.successGreen,
     textAlign: 'center',
@@ -125,6 +128,7 @@ export const styles = StyleSheet.create({
   },
   locationName: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.small,
     color: Colors.textSecondary,
   },
@@ -146,11 +150,13 @@ export const styles = StyleSheet.create({
   },
   etaChipText: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption2,
     color: Colors.successGreen,
   },
   mapsLink: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.primary,
   },

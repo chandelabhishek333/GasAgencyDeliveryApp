@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -22,11 +22,13 @@ export const styles = StyleSheet.create({
   },
   customerChipText: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.primary,
   },
   title: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subheading,
     color: Colors.textSecondary,
     textAlign: 'center',
@@ -49,10 +51,12 @@ export const styles = StyleSheet.create({
   },
   resendHighlight: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     color: Colors.secondary,
   },
   resendLink: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     color: Colors.secondary,
   },
   infoCard: {
@@ -89,6 +93,7 @@ export const styles = StyleSheet.create({
   },
   troubleLink: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.footnote,
     color: Colors.primary,
   },

@@ -5,12 +5,15 @@ import type { Notification } from '../../types';
 
 interface NotificationsState {
   items: Notification[];
+  /** Live GET /notifications/unread-count — the tab bar badge. null until loaded (badge then derives from `items`). */
+  unreadCount: number | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
 
 const initialState: NotificationsState = {
   items: [],
+  unreadCount: null,
   status: 'idle',
   error: null,
 };
@@ -21,6 +24,18 @@ export const fetchNotifications = createAsyncThunk<Notification[], void, { rejec
   async (_, { rejectWithValue }) => {
     try {
       return await userService.getNotifications();
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  },
+);
+
+/** Tab bar bell badge — the server's own unread count. */
+export const fetchUnreadCount = createAsyncThunk<number, void, { rejectValue: string }>(
+  'notifications/fetchUnreadCount',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await userService.getUnreadCount();
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }
@@ -54,12 +69,18 @@ const notificationsSlice = createSlice({
         state.status = 'succeeded';
         state.items = action.payload;
       })
+      .addCase(fetchUnreadCount.fulfilled, (state, action) => {
+        state.unreadCount = action.payload;
+      })
       .addCase(fetchNotifications.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload ?? 'Failed to load notifications.';
       })
       .addCase(markNotificationRead.fulfilled, (state, action) => {
         const notification = state.items.find((item) => item.id === action.payload);
+        if (notification && !notification.isRead && state.unreadCount) {
+          state.unreadCount -= 1;
+        }
         if (notification) {
           notification.isRead = true;
         }

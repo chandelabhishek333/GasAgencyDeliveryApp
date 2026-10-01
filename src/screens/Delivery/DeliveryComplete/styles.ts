@@ -1,16 +1,22 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.bgWhite,
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  // flexGrow (not flex) so a short receipt stays vertically centered
+  // while a long multi-type one scrolls instead of being squeezed.
+  content: {
+    flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     gap: 10,
   },
   // Outer ring approximates the mockup's "0 0 0 8px" glow spread,
@@ -36,6 +42,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.headingLg,
     color: Colors.textSecondary,
     textAlign: 'center',
@@ -69,6 +76,7 @@ export const styles = StyleSheet.create({
   },
   receiptOrderId: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subtitle,
     color: Colors.textDark,
   },
@@ -81,29 +89,113 @@ export const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.divider,
   },
+  // space-between rather than `flex: 1` on the label: receiptLabel is
+  // also used inside the column-direction receiptLabelGroup, where a
+  // flex:1 Text in an auto-height parent can collapse to 0 under Fabric.
   receiptRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: Spacing.sm,
   },
-  receiptIcon: {
-    fontSize: FontSize.subheading,
+  receiptLabelGroup: {
+    flexShrink: 1,
+    gap: 2,
   },
   receiptLabel: {
-    flex: 1,
+    flexShrink: 1,
     fontFamily: FontFamily.medium,
     fontSize: FontSize.footnote,
     color: Colors.textMuted,
   },
+  /** Cylinder type under a single-type section's label, e.g. "19 KG Commercial". */
+  receiptItemLabel: {
+    fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
+    fontSize: FontSize.label,
+    color: Colors.textDark,
+  },
   receiptValue: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.label,
     color: Colors.successGreen,
   },
-  receiptValuePayment: {
+  receiptValueNeutral: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.label,
     color: Colors.textSecondary,
+  },
+  receiptSection: {
+    gap: Spacing.xs,
+  },
+  receiptSectionTitle: {
+    flexShrink: 1,
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.footnote,
+    color: Colors.textDark,
+  },
+  // Per-type lines under a multi-type section, indented off the header.
+  receiptSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+    paddingLeft: Spacing.md,
+  },
+  receiptSubLabel: {
+    flexShrink: 1,
+    fontFamily: FontFamily.medium,
+    fontSize: FontSize.footnote,
+    color: Colors.textMuted,
+  },
+  receiptSubValue: {
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.label,
+    color: Colors.textDark,
+  },
+  totalBadge: {
+    paddingVertical: 2,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.round,
+    backgroundColor: Colors.badgeDoneBg,
+  },
+  totalBadgeText: {
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.caption1,
+    color: Colors.badgeDoneText,
+  },
+  statusBadge: {
+    paddingVertical: 3,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.round,
+  },
+  statusBadgeFull: {
+    backgroundColor: Colors.successLight,
+  },
+  statusBadgePartial: {
+    backgroundColor: Colors.warningLight,
+  },
+  statusBadgeText: {
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.caption1,
+  },
+  statusBadgeTextFull: {
+    color: Colors.successGreen,
+  },
+  statusBadgeTextPartial: {
+    color: Colors.warningYellow,
+  },
+  pendingValue: {
+    fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
+    fontSize: FontSize.label,
+    color: Colors.secondary,
   },
   footer: {
     paddingTop: Spacing.sm,

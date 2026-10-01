@@ -61,7 +61,6 @@ DeliveryApp/
 ├── docs/                  # Project documentation
 ├── __tests__/             # Unit, integration and E2E tests
 ├── scripts/               # Build & deployment automation scripts
-├── env/                   # Environment variable files (.env.*)
 └── .github/               # GitHub Actions CI/CD workflows
 ```
 
@@ -75,25 +74,15 @@ See [`docs/guides/setup/`](./docs/guides/setup/) for the full step-by-step guide
 # 1. Install dependencies
 npm install   # or: yarn install
 
-# 2. iOS (macOS only)
-cd ios && pod install && cd ..
-
-# 3. Copy environment file
-cp env/.env.example env/.env.development
+# 2. Copy environment file
+cp .env.example .env
 ```
 
 ---
 
 ## Environment Setup
 
-All environment variables live in the `env/` folder. Never commit real secrets.
-
-| File                  | Purpose                    |
-|-----------------------|----------------------------|
-| `.env.development`    | Local development values   |
-| `.env.staging`        | Staging server values      |
-| `.env.production`     | Production server values   |
-| `.env.example`        | Template — safe to commit  |
+Environment variables are loaded from the project-root `.env` at native build time via `react-native-config` (see `src/config/apiConfig.ts`). Never commit real secrets — only `.env.example` is tracked.
 
 ---
 
@@ -103,12 +92,11 @@ All environment variables live in the `env/` folder. Never commit real secrets.
 # Android
 npx react-native run-android
 
-# iOS
-npx react-native run-ios
-
 # Start Metro bundler only
 npx react-native start
 ```
+
+> iOS isn't scaffolded yet (no `ios/` folder) — this app currently targets Android only.
 
 ---
 

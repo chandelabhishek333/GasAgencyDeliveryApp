@@ -3,7 +3,7 @@
 // resolve them at bundle time. Keep this alias map in sync with
 // tsconfig.json's `paths`.
 module.exports = {
-  presets: ['babel-preset-expo'],
+  presets: ['module:@react-native/babel-preset'],
   plugins: [
     [
       'module-resolver',

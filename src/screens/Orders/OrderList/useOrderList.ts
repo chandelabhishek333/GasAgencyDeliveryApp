@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchOrders, setSearchQuery, setStatusFilter } from '../../../store/slices/ordersSlice';
+import { setActiveDelivery } from '../../../store/slices/deliverySlice';
 import type { OrderStatusFilter } from '../../../store/slices/ordersSlice';
 import {
   selectFilteredOrders,
@@ -27,8 +28,23 @@ export const useOrderList = (navigation: OrderListScreenProps['navigation']) => 
     dispatch(fetchOrders());
   }, [dispatch]);
 
+  // Each status opens where the driver actually is in that order's flow:
+  // pending -> Order Details, out for delivery -> straight to location
+  // verification (Active Delivery), completed/failed -> read-only view
+  // (a failed delivery must not offer "Out for Delivery" again).
   const handleOrderPress = (order: Order): void => {
-    navigation.navigate(ROUTES.ORDER_DETAIL, { orderId: order.id });
+    switch (order.status) {
+      case 'in_progress':
+        dispatch(setActiveDelivery(order));
+        navigation.navigate(ROUTES.ACTIVE_DELIVERY);
+        return;
+      case 'completed':
+      case 'failed':
+        navigation.navigate(ROUTES.COMPLETED_ORDER_DETAIL, { orderId: order.id });
+        return;
+      default:
+        navigation.navigate(ROUTES.ORDER_DETAIL, { orderId: order.id });
+    }
   };
 
   return {

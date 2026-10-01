@@ -8,6 +8,7 @@ import type {
   LogoutApiRequest,
   MeApiResponse,
   RequestOtpApiResponse,
+  ResendOtpApiRequest,
   VerifyOtpApiRequest,
   VerifyOtpApiResponse,
   VerifyOtpRequest,
@@ -49,6 +50,16 @@ const toLoginResponse = (data: RequestOtpApiResponse): LoginResponse => ({
   message: data.message,
 });
 
+const RESEND_SUCCESS_MESSAGE = 'New OTP sent successfully';
+
+// Resend's documented response carries no `message`, so the toast copy
+// is fixed — but staging still hands back the OTP (as `dev_otp`, or
+// embedded in `message`), so it's appended there to keep testing possible.
+const toResendMessage = (data: Partial<RequestOtpApiResponse>): string => {
+  const devOtp = data.dev_otp ?? data.message?.match(/OTP:\s*(\d+)/)?.[1];
+  return devOtp ? `${RESEND_SUCCESS_MESSAGE}. OTP: ${devOtp}` : RESEND_SUCCESS_MESSAGE;
+};
+
 export const authService = {
   async login(payload: LoginRequest): Promise<LoginResponse> {
     const response = await apiClient.post<RequestOtpApiResponse>(
@@ -58,21 +69,25 @@ export const authService = {
     return toLoginResponse(response.data);
   },
 
-  async resendOtp(payload: LoginRequest): Promise<LoginResponse> {
-    const response = await apiClient.post<RequestOtpApiResponse>(
-      AUTH_ENDPOINTS.RESEND_OTP,
-      await buildRequestOtpBody(payload),
-    );
-    return toLoginResponse(response.data);
+  // The backend invalidates `requestId` the moment this succeeds —
+  // callers must replace it with the returned `otpToken`.
+  async resendOtp(requestId: string): Promise<LoginResponse> {
+    const body: ResendOtpApiRequest = {
+      request_id: requestId,
+      device: await getDeviceInfo(),
+    };
+    const response = await apiClient.post<RequestOtpApiResponse>(AUTH_ENDPOINTS.RESEND_OTP, body);
+    return { ...toLoginResponse(response.data), message: toResendMessage(response.data) };
   },
 
   // `payload.otpToken` carries the `request_id` handed back by
   // login()/resendOtp() above — the live verify endpoint has no
   // separate driver payload, so the profile is fetched separately via
-  // getProfile() (GET /me).
+  // getProfile() (GET /me). `fcmToken` is the push token this call
+  // registered, so the caller can record what the server now holds.
   async verifyOtp(
     payload: VerifyOtpRequest,
-  ): Promise<Pick<VerifyOtpResponse, 'accessToken' | 'refreshToken'>> {
+  ): Promise<Pick<VerifyOtpResponse, 'accessToken' | 'refreshToken'> & { fcmToken: string }> {
     const body: VerifyOtpApiRequest = {
       request_id: payload.otpToken,
       mobile_number: payload.phone,
@@ -85,6 +100,7 @@ export const authService = {
     return {
       accessToken: response.data.token.access_token,
       refreshToken: response.data.token.refresh_token,
+      fcmToken: body.device.fcm_token,
     };
   },
 
@@ -115,5 +131,12 @@ export const authService = {
   async logout(refreshToken: string): Promise<void> {
     const body: LogoutApiRequest = { refresh_token: refreshToken };
     await apiClient.post(AUTH_ENDPOINTS.LOGOUT, body);
+  },
+
+  // Ends every session for this driver on every device and clears all of
+  // their stored push tokens server-side. Authenticated via the Bearer
+  // access token (attached by the auth interceptor); no body; 204.
+  async logoutAll(): Promise<void> {
+    await apiClient.post(AUTH_ENDPOINTS.LOGOUT_ALL);
   },
 };

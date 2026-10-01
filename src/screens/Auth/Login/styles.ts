@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, LetterSpacing, LineHeight, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, LetterSpacing, LineHeight, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -22,6 +22,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.headingLg + 1.5,
     color: Colors.textPrimary,
     letterSpacing: -0.2,
@@ -39,6 +40,7 @@ export const styles = StyleSheet.create({
   },
   dutyBadgeText: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.labelLg + 1.5,
     color: Colors.primary,
     letterSpacing: LetterSpacing.normal,
@@ -80,12 +82,14 @@ export const styles = StyleSheet.create({
   },
   code: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.subtitle,
     color: Colors.textLight,
   },
   phoneInput: {
     flex: 1,
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.buttonLg,
     color: Colors.textSecondary,
     letterSpacing: LetterSpacing.tight,

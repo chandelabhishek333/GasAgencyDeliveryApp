@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   base: {
@@ -21,14 +21,17 @@ export const styles = StyleSheet.create({
   },
   labelMd: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
   },
   labelSm: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption2,
   },
   chevron: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
   },
 
   // Variants — light tint background + matching text (pending/inProgress/completed/info)
@@ -38,6 +41,9 @@ export const styles = StyleSheet.create({
   inProgressLabel: { color: Colors.badgeInProgressText },
   completed: { backgroundColor: Colors.badgeDoneBg },
   completedLabel: { color: Colors.badgeDoneText },
+  // Soft red tint, red text — a delivery that couldn't be completed.
+  failed: { backgroundColor: Colors.errorLight },
+  failedLabel: { color: Colors.errorRed },
   info: { backgroundColor: Colors.infoBg, borderWidth: 1, borderColor: Colors.infoBorder },
   infoLabel: { color: Colors.infoText },
 

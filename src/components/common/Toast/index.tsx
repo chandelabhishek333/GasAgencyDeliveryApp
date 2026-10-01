@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 import type { ViewStyle } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../../../theme';
 import { styles } from './styles';
@@ -13,7 +13,7 @@ const CONTAINER_STYLE_BY_VARIANT: Record<ToastVariant, ViewStyle> = {
   info: styles.info,
 };
 
-const ICON_NAME_BY_VARIANT: Record<ToastVariant, keyof typeof Ionicons.glyphMap> = {
+const ICON_NAME_BY_VARIANT: Record<ToastVariant, string> = {
   success: 'checkmark-circle',
   error: 'alert-circle',
   info: 'information-circle',
@@ -46,13 +46,20 @@ export const Toast: React.FC<ToastProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
 
+  // Held in a ref so a parent re-rendering with a fresh (non-memoized)
+  // `onDismiss` — e.g. OTPVerification's 1s countdown — doesn't restart
+  // the timer on every tick and keep the toast up forever. The timer
+  // restarts only when the toast is shown or its message changes.
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
   useEffect(() => {
-    if (!visible || !duration || !onDismiss) {
+    if (!visible || !duration) {
       return undefined;
     }
-    const timer = setTimeout(onDismiss, duration);
+    const timer = setTimeout(() => onDismissRef.current?.(), duration);
     return () => clearTimeout(timer);
-  }, [visible, duration, onDismiss]);
+  }, [visible, duration, message]);
 
   if (!visible) {
     return null;

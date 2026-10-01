@@ -78,6 +78,12 @@ const forceLogoutSession = async (): Promise<void> => {
  * ever sees an already-used refresh token again it revokes every
  * session for that driver — the mutex here is what prevents two
  * refresh calls from racing and causing exactly that.
+ *
+ * Only a response from the server (e.g. 401 for a revoked/reused
+ * refresh token) ends the session. A network error or timeout — or a
+ * local failure building the body — resolves null and keeps the stored
+ * pair, so a signal drop on the road doesn't sign the driver out; the
+ * next request simply tries the refresh again.
  */
 const refreshAccessToken = async (): Promise<string | null> => {
   if (!refreshPromise) {
@@ -109,10 +115,13 @@ const refreshAccessToken = async (): Promise<string | null> => {
         await AsyncStorage.multiSet([
           [STORAGE_KEYS.ACCESS_TOKEN, accessToken],
           [STORAGE_KEYS.REFRESH_TOKEN, newRefreshToken],
+          [STORAGE_KEYS.FCM_TOKEN_SYNCED, device.fcm_token],
         ]);
         return accessToken;
-      } catch {
-        await forceLogoutSession();
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+          await forceLogoutSession();
+        }
         return null;
       } finally {
         refreshPromise = null;
@@ -120,6 +129,28 @@ const refreshAccessToken = async (): Promise<string | null> => {
     })();
   }
   return refreshPromise;
+};
+
+/**
+ * Pushes a rotated FCM token to the server. The live API has no
+ * dedicated device-update endpoint — /token/refresh's optional `device`
+ * is the documented way to report a changed token — so this runs an
+ * ordinary refresh through the same mutex as the 401 path.
+ *
+ * No-op when signed out, or when the server already holds the current
+ * token (FCM_TOKEN_SYNCED, recorded on OTP verify and on every refresh).
+ * Call after the token is persisted: on launch and from onTokenRefresh.
+ */
+export const syncFcmTokenWithServer = async (): Promise<void> => {
+  const [[, refreshToken], [, currentToken], [, syncedToken]] = await AsyncStorage.multiGet([
+    STORAGE_KEYS.REFRESH_TOKEN,
+    STORAGE_KEYS.FCM_TOKEN,
+    STORAGE_KEYS.FCM_TOKEN_SYNCED,
+  ]);
+  if (!refreshToken || !currentToken || currentToken === syncedToken) {
+    return;
+  }
+  await refreshAccessToken();
 };
 
 /** A single `fields` entry can be a plain string or an object carrying its own `message`. */
@@ -206,6 +237,34 @@ const NO_REFRESH_RETRY_PREFIXES = [
 const skipsRefreshRetry = (url?: string): boolean =>
   !!url && NO_REFRESH_RETRY_PREFIXES.some((prefix) => url.startsWith(prefix));
 
+/** Live-API failures that mean "endpoint not deployed / server down", not "request was wrong". */
+const DEV_MOCK_FALLBACK_STATUSES = new Set([404, 500, 502, 503, 504]);
+const AUTH_PATH_PREFIX = '/api/v1/delivery/auth/';
+
+/**
+ * Dev-only safety net while the live backend is still being deployed:
+ * a network error, timeout, 404 or 5xx serves the route's mock data
+ * instead of an error, so no screen goes blank on the device.
+ *
+ * - Never in release builds — real users must see real failures.
+ * - Never under USE_MOCK_DATA — the mock adapter already answers everything.
+ * - Never for /auth/* — a faked OTP verify or token refresh would "log
+ *   in" with a mock token, and auth errors (bad OTP, 404 request id)
+ *   must reach the UI as-is.
+ * - Never for a cancelled request.
+ * - 401 isn't in the list, so the refresh-and-retry path below still runs.
+ */
+const shouldServeDevMock = (error: AxiosError, config: RetriableRequestConfig): boolean => {
+  if (!__DEV__ || USE_MOCK_DATA || axios.isCancel(error)) {
+    return false;
+  }
+  if (config.url?.startsWith(AUTH_PATH_PREFIX)) {
+    return false;
+  }
+  // No response at all = network error or timeout (ECONNABORTED).
+  return !error.response || DEV_MOCK_FALLBACK_STATUSES.has(error.response.status);
+};
+
 /**
  * Normalizes every rejected response to `ApiError` (see
  * docs/api/API_REFERENCE.md error shape) and transparently retries a
@@ -219,23 +278,15 @@ export const attachErrorInterceptor = (instance: AxiosInstance): void => {
     async (error: AxiosError<KnownErrorResponse>) => {
       const config = error.config as RetriableRequestConfig | undefined;
 
-      // Dev/preview fallback: the real API isn't live yet, so a
-      // genuine network error (request sent, no response ever came
-      // back) serves mock data instead of dead-ending the screen.
-      // Gated on !USE_MOCK_DATA — under mock mode apiClient's adapter
-      // already handles every request, so this never needs to run.
-      const isNetworkError = !error.response && Boolean(error.request);
-      if (!USE_MOCK_DATA && isNetworkError && config) {
+      if (config && shouldServeDevMock(error, config)) {
         try {
           const mock = resolveMockResponse(config);
-          if (__DEV__) {
-            // eslint-disable-next-line no-console
-            console.warn(
-              '[mock] Network error reaching the real API — falling back to mock data for',
-              (config.method ?? 'get').toUpperCase(),
-              config.url,
-            );
-          }
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[API Fallback] Live endpoint error (${error.response?.status ?? error.code ?? 'network'}) -> using mock data:`,
+            (config.method ?? 'get').toUpperCase(),
+            config.url,
+          );
           const response: AxiosResponse = {
             data: mock.data,
             status: mock.status,

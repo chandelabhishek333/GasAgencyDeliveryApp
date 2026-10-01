@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   row: {
@@ -40,6 +40,7 @@ export const styles = StyleSheet.create({
   },
   labelActive: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     color: Colors.textSecondary,
   },
 });

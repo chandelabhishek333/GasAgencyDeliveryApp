@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -30,6 +30,7 @@ export const styles = StyleSheet.create({
   message: {
     flex: 1,
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: 13,
     color: Colors.textPrimary,
   },

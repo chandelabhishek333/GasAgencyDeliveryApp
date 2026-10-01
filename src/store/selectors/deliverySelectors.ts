@@ -7,6 +7,8 @@ export const selectActiveDelivery = (state: RootState) => state.delivery.activeD
 export const selectDeliveryDraft = (state: RootState) => state.delivery.draft;
 export const selectDriverLocation = (state: RootState) => state.delivery.driverLocation;
 export const selectLastCompletedSummary = (state: RootState) => state.delivery.lastCompletedSummary;
+/** Method + amount submitted with Confirm Delivery — for the OTP step / a future dynamic-QR screen. */
+export const selectConfirmedPayment = (state: RootState) => state.delivery.confirmedPayment;
 export const selectTodayStatus = (state: RootState) => state.delivery.todayStatus;
 export const selectDeliveryActionStatus = (state: RootState) => state.delivery.actionStatus;
 export const selectDeliveryError = (state: RootState) => state.delivery.error;

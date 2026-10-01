@@ -28,6 +28,7 @@ export const ROUTES = {
   // Order stack — mounted under the Deliveries tab, src/screens/Orders/
   ORDER_LIST: 'OrderList',
   ORDER_DETAIL: 'OrderDetail',
+  COMPLETED_ORDER_DETAIL: 'CompletedOrderDetail',
   ORDER_TRACKING: 'OrderTracking',
 
   // Delivery stack — nested inside the Order stack, src/screens/Delivery/

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Pressable, StatusBar, Text, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components/common/Button';
 import { OTPInput } from '../../../components/common/OTPInput';
@@ -10,7 +10,7 @@ import { styles } from './styles';
 import { useOTPVerification } from './useOTPVerification';
 import type { OTPVerificationScreenProps } from './types';
 
-const TOAST_DURATION_MS = 4000;
+const TOAST_DURATION_MS = 3500;
 
 /** Screen 3 — Duty OTP verification. */
 export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = () => {
@@ -19,13 +19,13 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = () =>
     setOtp,
     isComplete,
     isLoading,
-    error,
+    hasError,
     secondsRemaining,
-    successMessage,
+    toast,
     phone,
     handleVerify,
     handleResend,
-    handleDismissSuccess,
+    handleDismissToast,
   } = useOTPVerification();
 
   const minutes = Math.floor(secondsRemaining / 60);
@@ -33,16 +33,20 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = () =>
   const formattedTimer = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
   return (
-    <LinearGradient colors={[Colors.gradientOtpStart, Colors.gradientOtpEnd]} style={styles.container}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[Colors.gradientOtpStart, Colors.gradientOtpEnd]}
+        style={StyleSheet.absoluteFill}
+      />
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <Toast
-        visible={Boolean(successMessage)}
-        message={successMessage ?? ''}
-        variant="success"
+        visible={Boolean(toast)}
+        message={toast?.message ?? ''}
+        variant={toast?.variant ?? 'success'}
         position="top"
         duration={TOAST_DURATION_MS}
-        onDismiss={handleDismissSuccess}
+        onDismiss={handleDismissToast}
       />
       <View style={styles.content}>
         <View style={styles.glowWrap}>
@@ -56,12 +60,11 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = () =>
           <OTPInput
             value={otp}
             onChangeText={setOtp}
-            error={Boolean(error)}
+            error={hasError}
             accentColor={Colors.primary}
             autoFocus
           />
         </View>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         {secondsRemaining > 0 ? (
           <Text style={styles.resend}>
@@ -87,6 +90,6 @@ export const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = () =>
         <Text style={styles.securityText}>Secure Device Authentication</Text>
       </View>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 };

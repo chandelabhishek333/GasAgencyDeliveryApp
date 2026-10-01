@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   row: {
@@ -27,6 +27,7 @@ export const styles = StyleSheet.create({
   // Group 6's ungrounded guess (was FontSize.subtitle/8.5).
   buttonLabel: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.body,
     lineHeight: FontSize.body,
   },
@@ -40,6 +41,7 @@ export const styles = StyleSheet.create({
     minWidth: 22,
     textAlign: 'center',
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.label,
     color: Colors.textSecondary,
   },

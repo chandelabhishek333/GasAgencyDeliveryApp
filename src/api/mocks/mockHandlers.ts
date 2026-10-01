@@ -1,4 +1,6 @@
 import type { InternalAxiosRequestConfig } from 'axios';
+import { DELIVERY_ENDPOINTS } from '../endpoints/deliveryEndpoints';
+import { USER_ENDPOINTS } from '../endpoints/userEndpoints';
 import { MOCK_DRIVER, MOCK_NOTIFICATIONS, MOCK_ORDER_HISTORY, MOCK_TODAY_DELIVERIES } from './mockData';
 import type {
   Delivery,
@@ -9,6 +11,7 @@ import type {
   MeApiResponse,
   Notification,
   Order,
+  OrderItemKind,
   Paginated,
   RequestOtpApiResponse,
   VerifyOtpApiResponse,
@@ -26,6 +29,10 @@ const matchId = (url: string, prefix: string, suffix = ''): string | null => {
   const match = url.match(pattern);
   return match ? match[1] : null;
 };
+
+/** Today's deliveries first, then history — so completed history orders open in detail too. */
+const findMockOrder = (id: string): Order | undefined =>
+  MOCK_TODAY_DELIVERIES.find((item) => item.id === id) ?? MOCK_ORDER_HISTORY.find((item) => item.id === id);
 
 const nowAsClockTime = (): string =>
   new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -108,42 +115,17 @@ export const resolveMockResponse = (config: InternalAxiosRequestConfig): MockRes
   if (method === 'post' && url === '/api/v1/delivery/auth/logout') {
     return { status: 200, data: { message: 'Logged out' } };
   }
+  if (method === 'post' && url === '/api/v1/delivery/auth/logout-all') {
+    return { status: 204, data: undefined };
+  }
 
-  // --- Deliveries (checked most-specific-first so e.g. "/deliveries/today" never matches the dynamic :id patterns below) ---
-  if (method === 'get' && url === '/deliveries/today') {
+  // --- Deliveries & orders — the live API serves both from /deliveries.
+  // Fixed paths (today, history, the list) are checked before the :id
+  // patterns so e.g. ".../deliveries/history" never matches as an id.
+  if (method === 'get' && url === DELIVERY_ENDPOINTS.TODAY) {
     return ok<Delivery[]>(MOCK_TODAY_DELIVERIES);
   }
-  const startId = method === 'post' ? matchId(url, '/deliveries', '/start') : null;
-  if (startId) {
-    return ok<DeliveryStartResponse>({ isAtLocation: true, distanceMetersFromDestination: 42 });
-  }
-  const confirmId = method === 'post' ? matchId(url, '/deliveries', '/confirm') : null;
-  if (confirmId) {
-    return ok<DeliveryConfirmResponse>({ deliveryId: confirmId, customerOtpRequired: true });
-  }
-  const otpDeliveryId = method === 'post' ? matchId(url, '/deliveries', '/verify-customer-otp') : null;
-  if (otpDeliveryId) {
-    const delivery = MOCK_TODAY_DELIVERIES.find((item) => item.id === otpDeliveryId);
-    const cylinder = delivery?.items.find((item) => item.kind === 'cylinderDelivery');
-    const empty = delivery?.items.find((item) => item.kind === 'emptyCollection');
-    return ok<DeliverySummary>({
-      deliveryId: otpDeliveryId,
-      orderNumber: delivery?.orderNumber ?? otpDeliveryId,
-      deliveredQuantity: cylinder?.quantity ?? 5,
-      emptyCollectedQuantity: empty?.quantity ?? 5,
-      completedAt: nowAsClockTime(),
-    });
-  }
-  const deliveryDetailId = method === 'get' ? matchId(url, '/deliveries') : null;
-  if (deliveryDetailId) {
-    const delivery = MOCK_TODAY_DELIVERIES.find((item) => item.id === deliveryDetailId);
-    if (delivery) {
-      return ok<Delivery>(delivery);
-    }
-  }
-
-  // --- Orders ---
-  if (method === 'get' && url === '/orders/history') {
+  if (method === 'get' && url === DELIVERY_ENDPOINTS.HISTORY) {
     return ok<Paginated<Order>>({
       items: MOCK_ORDER_HISTORY,
       page: 1,
@@ -151,7 +133,7 @@ export const resolveMockResponse = (config: InternalAxiosRequestConfig): MockRes
       totalItems: MOCK_ORDER_HISTORY.length,
     });
   }
-  if (method === 'get' && url === '/orders') {
+  if (method === 'get' && url === DELIVERY_ENDPOINTS.LIST) {
     return ok<Paginated<Order>>({
       items: MOCK_TODAY_DELIVERIES,
       page: 1,
@@ -159,22 +141,53 @@ export const resolveMockResponse = (config: InternalAxiosRequestConfig): MockRes
       totalItems: MOCK_TODAY_DELIVERIES.length,
     });
   }
-  const orderDetailId = method === 'get' ? matchId(url, '/orders') : null;
-  if (orderDetailId) {
-    const order = MOCK_TODAY_DELIVERIES.find((item) => item.id === orderDetailId);
-    if (order) {
-      return ok<Order>(order);
+  const startId = method === 'post' ? matchId(url, DELIVERY_ENDPOINTS.LIST, '/start') : null;
+  if (startId) {
+    return ok<DeliveryStartResponse>({ isAtLocation: true, distanceMetersFromDestination: 42 });
+  }
+  const confirmId = method === 'post' ? matchId(url, DELIVERY_ENDPOINTS.LIST, '/confirm') : null;
+  if (confirmId) {
+    return ok<DeliveryConfirmResponse>({ deliveryId: confirmId, customerOtpRequired: true });
+  }
+  const otpDeliveryId = method === 'post' ? matchId(url, DELIVERY_ENDPOINTS.LIST, '/verify-customer-otp') : null;
+  if (otpDeliveryId) {
+    const delivery = findMockOrder(otpDeliveryId);
+    const sumOf = (kind: OrderItemKind): number =>
+      (delivery?.items ?? []).filter((item) => item.kind === kind).reduce((total, item) => total + item.quantity, 0);
+    return ok<DeliverySummary>({
+      deliveryId: otpDeliveryId,
+      orderNumber: delivery?.orderNumber ?? otpDeliveryId,
+      deliveredQuantity: delivery ? sumOf('cylinderDelivery') : 5,
+      emptyCollectedQuantity: delivery ? sumOf('emptyCollection') : 5,
+      completedAt: nowAsClockTime(),
+    });
+  }
+  const detailId = method === 'get' ? matchId(url, DELIVERY_ENDPOINTS.LIST) : null;
+  if (detailId) {
+    const delivery = findMockOrder(detailId);
+    if (delivery) {
+      return ok<Delivery>(delivery);
     }
   }
 
-  // --- User ---
-  if (method === 'get' && url === '/driver/profile') {
+  // --- Driver & notifications ---
+  if (method === 'get' && url === USER_ENDPOINTS.PROFILE) {
     return ok<Driver>(MOCK_DRIVER);
   }
-  if (method === 'get' && url === '/notifications') {
+  if (method === 'patch' && url === USER_ENDPOINTS.DRIVER_STATUS) {
+    const body = typeof config.data === 'string' ? JSON.parse(config.data) : config.data;
+    return ok<Driver>({ ...MOCK_DRIVER, onDuty: Boolean(body?.onDuty) });
+  }
+  if (method === 'get' && url === USER_ENDPOINTS.INVENTORY) {
+    return ok({ fullCylinders: [], fullCylinderCount: 24, emptyCylinderCount: 6, activeDeliveries: 2 });
+  }
+  if (method === 'get' && url === USER_ENDPOINTS.UNREAD_COUNT) {
+    return ok({ unread: MOCK_NOTIFICATIONS.filter((notification) => !notification.isRead).length });
+  }
+  if (method === 'get' && url === USER_ENDPOINTS.NOTIFICATIONS) {
     return ok<Notification[]>(MOCK_NOTIFICATIONS);
   }
-  const notificationReadId = method === 'patch' ? matchId(url, '/notifications', '/read') : null;
+  const notificationReadId = method === 'patch' ? matchId(url, USER_ENDPOINTS.NOTIFICATIONS, '/read') : null;
   if (notificationReadId) {
     return ok<undefined>(undefined);
   }

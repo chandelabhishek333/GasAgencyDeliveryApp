@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { OrderListScreen } from '../../screens/Orders/OrderList';
 import { OrderDetailScreen } from '../../screens/Orders/OrderDetail';
+import { CompletedOrderDetailScreen } from '../../screens/Orders/CompletedOrderDetail';
 import { ActiveDeliveryScreen } from '../../screens/Delivery/ActiveDelivery';
 import { DeliveryProofScreen } from '../../screens/Delivery/DeliveryProof';
 import { CustomerOTPScreen } from '../../screens/Delivery/CustomerOTP';
@@ -11,6 +12,7 @@ import { ROUTES } from '../../constants/routes';
 export type OrderStackParamList = {
   [ROUTES.ORDER_LIST]: undefined;
   [ROUTES.ORDER_DETAIL]: { orderId: string };
+  [ROUTES.COMPLETED_ORDER_DETAIL]: { orderId: string };
   [ROUTES.ACTIVE_DELIVERY]: undefined;
   [ROUTES.DELIVERY_PROOF]: undefined;
   [ROUTES.CUSTOMER_OTP]: undefined;
@@ -39,6 +41,7 @@ export const OrderStack: React.FC = () => (
   <Stack.Navigator initialRouteName={ROUTES.ORDER_LIST} screenOptions={{ headerShown: false }}>
     <Stack.Screen name={ROUTES.ORDER_LIST} component={OrderListScreen} />
     <Stack.Screen name={ROUTES.ORDER_DETAIL} component={OrderDetailScreen} />
+    <Stack.Screen name={ROUTES.COMPLETED_ORDER_DETAIL} component={CompletedOrderDetailScreen} />
     <Stack.Screen name={ROUTES.ACTIVE_DELIVERY} component={ActiveDeliveryScreen} />
     <Stack.Screen name={ROUTES.DELIVERY_PROOF} component={DeliveryProofScreen} />
     <Stack.Screen name={ROUTES.CUSTOMER_OTP} component={CustomerOTPScreen} />

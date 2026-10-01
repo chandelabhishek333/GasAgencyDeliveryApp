@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -37,11 +37,13 @@ export const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.body,
     color: Colors.white,
   },
   greetingLine: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: 15,
     color: Colors.white,
   },
@@ -64,7 +66,7 @@ export const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
   },
   topGroup: {
-    gap: Spacing.md,
+    gap: 15,
   },
   bottomGroup: {
     gap: Spacing.md,
@@ -84,7 +86,7 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.bgWhite,
     borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     paddingHorizontal: Spacing.lg,
     borderWidth: 1,
     borderColor: '#EAEFF5',
@@ -118,6 +120,7 @@ export const styles = StyleSheet.create({
   },
   dutyCardTitle: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.bodySm,
     color: Colors.textPrimary,
   },
@@ -132,7 +135,7 @@ export const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.bgWhite,
     borderRadius: BorderRadius.lg,
-    paddingVertical: 14,
+    paddingVertical: 17,
     paddingHorizontal: Spacing.lg,
     borderWidth: 1,
     borderColor: '#EAEFF5',
@@ -148,24 +151,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  cardHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  todayIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  todayIconText: {
-    fontSize: FontSize.bodyLg,
-  },
   todayLabel: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption1,
     color: Colors.textMuted,
   },
@@ -176,17 +164,20 @@ export const styles = StyleSheet.create({
   },
   todayCount: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.heading,
     color: Colors.textPrimary,
     lineHeight: FontSize.heading,
   },
   todayCountUnit: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.small,
     color: Colors.textMuted,
   },
   dateBadge: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.textLight,
     backgroundColor: Colors.bgLight,
@@ -204,7 +195,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    paddingVertical: Spacing.md,
+    paddingVertical: 16,
     paddingHorizontal: 4,
     alignItems: 'center',
   },
@@ -222,11 +213,13 @@ export const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.bodyLg,
     lineHeight: FontSize.bodyLg,
   },
   statLabel: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption2,
     marginTop: 2,
   },
@@ -243,47 +236,34 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.bgWhite,
     borderRadius: BorderRadius.md,
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.sm,
+    paddingVertical: 18,
+    paddingHorizontal: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.borderLight,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 2,
     elevation: 1,
   },
-  vehicleIconBox: {
-    width: 30,
-    height: 30,
-    borderRadius: BorderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vehicleIconTruck: {
-    backgroundColor: Colors.infoBg,
-  },
-  vehicleIconBox2: {
-    backgroundColor: Colors.warningLight,
-  },
-  vehicleIconText: {
-    fontSize: FontSize.bodySm,
-  },
   vehicleLabel: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.textMuted,
+    textAlign: 'center',
   },
   vehicleValueRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    justifyContent: 'center',
     gap: 3,
   },
   vehicleValue: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.button,
   },
   vehicleValueBlue: {
@@ -313,24 +293,27 @@ export const styles = StyleSheet.create({
   },
   nextPillText: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.caption2,
     color: Colors.secondary,
   },
-  nextSlot: {
+  nextDate: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.textMuted,
   },
-  nextBottomRow: {
+  // Customer name/order id with the arrow button directly opposite it.
+  nextHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  nextInfo: {
-    flex: 1,
+    gap: Spacing.sm,
   },
   nextTitle: {
+    flexShrink: 1,
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.labelLg,
     color: Colors.textPrimary,
   },
@@ -340,23 +323,52 @@ export const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginTop: Spacing.xs,
   },
-  nextItemsLine: {
+  // Two-column grid, one row per cylinder type: delivered (left) and its
+  // empty (right). Fixed flex ratios, both left-aligned, so every
+  // "(Collect: …" starts at the same x regardless of text length.
+  // flexBasis: 0 is explicit because `flex: n` alone on a Text here grows
+  // from its content width, which put each row's column at a different x.
+  cylinderRowsContainer: {
+    marginTop: Spacing.xs + 2,
+    gap: 4,
+  },
+  cylinderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  cylinderDeliveryText: {
+    flexGrow: 1.15,
+    flexShrink: 1,
+    flexBasis: 0,
+    textAlign: 'left',
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.primary,
-    marginTop: Spacing.xs,
+  },
+  cylinderCollectText: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    textAlign: 'left',
+    fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
+    fontSize: FontSize.caption2,
+    color: Colors.textMuted,
   },
   nextArrowButton: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.sm,
+    width: 28,
+    height: 28,
+    borderRadius: 6,
     backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   nextArrowText: {
     color: Colors.white,
-    fontSize: FontSize.bodySm,
+    fontSize: 12,
+    textAlign: 'center',
   },
   emptyNextText: {
     fontFamily: FontFamily.medium,
@@ -369,6 +381,7 @@ export const styles = StyleSheet.create({
   // ---- Shift Performance / Summary card ----
   shiftTitle: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.textMuted,
     marginBottom: Spacing.sm,
@@ -386,12 +399,9 @@ export const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderColor: Colors.divider,
   },
-  shiftIcon: {
-    fontSize: FontSize.bodyLg,
-    marginBottom: 2,
-  },
   shiftValue: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.bodySm,
     color: Colors.textPrimary,
   },
@@ -403,28 +413,26 @@ export const styles = StyleSheet.create({
 
   // ---- Safety banner ----
   safetyBanner: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    justifyContent: 'center',
     backgroundColor: Colors.safetyBg,
     borderWidth: 1,
     borderColor: Colors.safetyBorder,
     borderRadius: BorderRadius.md,
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: Spacing.md,
   },
-  safetyIcon: {
-    fontSize: FontSize.body,
-  },
   safetyText: {
-    flex: 1,
+    textAlign: 'center',
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.safetyText,
     lineHeight: FontSize.caption2 * 1.3,
   },
   safetyBold: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     color: '#B45309',
   },
 

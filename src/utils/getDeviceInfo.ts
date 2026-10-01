@@ -1,9 +1,9 @@
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../constants/storageKeys';
-import { getStoredPushToken, registerForPushNotificationsAsync } from '../services/notificationService';
+import { getFcmTokenAsync, getStoredPushToken } from '../services/notificationService';
 import type { ApiDeviceInfo } from '../types';
+const { version: APP_VERSION } = require('../../package.json') as { version: string };
 
 const generateRandomId = (prefix: string): string =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
@@ -44,26 +44,25 @@ const getDeviceId = async (): Promise<string> => {
 };
 
 /**
- * Resolves the real FCM (Android) / APNs (iOS) device push token.
+ * Resolves the real FCM registration token (Android only for now — see
+ * notificationService.ts), independent of notification permission.
  *
- * App.tsx registers for push notifications on launch, which persists the
- * token via notificationService — the common case here is just reading
- * that cached value. If it's missing (e.g. this runs before that
- * registration has resolved) a registration attempt is made inline; if
- * permission is denied or the native fetch fails for any reason, this
- * falls back to a stable per-install placeholder so `fcm_token` is always
- * present and non-empty and the auth request never crashes because of it.
+ * Asks Firebase directly each time so a rotated token is always picked up.
+ * If that native call fails, the last real token persisted by
+ * notificationService (on launch or via onTokenRefresh) is used instead.
+ * There is no placeholder: if neither exists this throws, and the auth
+ * request fails with that error rather than sending a fake token.
  */
 const getFcmToken = async (): Promise<string> => {
-  const stored = await getStoredPushToken();
-  if (stored) {
-    return stored;
+  try {
+    return await getFcmTokenAsync();
+  } catch (error) {
+    const stored = await getStoredPushToken();
+    if (stored) {
+      return stored;
+    }
+    throw new Error(`Unable to get FCM token: ${error instanceof Error ? error.message : String(error)}`);
   }
-  const registered = await registerForPushNotificationsAsync();
-  if (registered) {
-    return registered;
-  }
-  return getOrCreatePersistedId(STORAGE_KEYS.FCM_TOKEN_PLACEHOLDER, 'no-fcm');
 };
 
 /**
@@ -73,7 +72,7 @@ const getFcmToken = async (): Promise<string> => {
 export const getDeviceInfo = async (): Promise<ApiDeviceInfo> => ({
   device_id: await getDeviceId(),
   device_type: Platform.OS.toUpperCase(),
-  device_name: Constants.deviceName ?? 'Unknown Device',
-  app_version: Constants.expoConfig?.version ?? '0.0.0',
+  device_name: Platform.OS === 'android' ? Platform.constants?.Model ?? 'Unknown Device' : 'Unknown Device',
+  app_version: APP_VERSION ?? '0.0.0',
   fcm_token: await getFcmToken(),
 });

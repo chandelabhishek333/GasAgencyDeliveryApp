@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   base: {
@@ -67,17 +67,21 @@ export const styles = StyleSheet.create({
   primaryLabel: {
     color: Colors.white,
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
   },
   secondaryLabel: {
     color: Colors.white,
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
   },
   outlineLabel: {
     color: Colors.textSecondary,
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
   },
   textLabel: {
     color: Colors.primary,
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
   },
 });

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -12,8 +12,34 @@ export const styles = StyleSheet.create({
   contentInner: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
+    paddingBottom: 110,
     gap: Spacing.md,
+  },
+  orderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  orderNumber: {
+    fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
+    fontSize: FontSize.body,
+    color: Colors.textSecondary,
+  },
+  // Compact outlined pill — opens the Update Order sheet.
+  updateButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  updateButtonText: {
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.small,
+    color: Colors.primary,
   },
   card: {
     backgroundColor: Colors.bgWhite,
@@ -28,9 +54,13 @@ export const styles = StyleSheet.create({
   },
   cardTitle: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.label,
     color: Colors.textSecondary,
     marginBottom: Spacing.sm,
+  },
+  itemList: {
+    gap: Spacing.sm,
   },
   itemRow: {
     flexDirection: 'row',
@@ -41,14 +71,18 @@ export const styles = StyleSheet.create({
     paddingVertical: 7,
     paddingHorizontal: 9,
   },
-  itemIcon: {
-    fontSize: 22,
+  staticQty: {
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.bodySm,
+    color: Colors.textPrimary,
   },
   itemInfo: {
     flex: 1,
   },
   itemLabel: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.small,
     color: Colors.textSecondary,
   },
@@ -68,6 +102,7 @@ export const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.label,
     color: Colors.textSecondary,
     marginBottom: 2,
@@ -84,6 +119,7 @@ export const styles = StyleSheet.create({
   },
   summaryValue: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.footnote,
     color: Colors.textSecondary,
   },
@@ -94,11 +130,13 @@ export const styles = StyleSheet.create({
   },
   summaryTotalLabel: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.small,
     color: Colors.textSecondary,
   },
   summaryTotalValue: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subtitle,
   },
   summaryTotalNeutral: {
@@ -109,6 +147,7 @@ export const styles = StyleSheet.create({
   },
   notesLabel: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.label,
     color: Colors.textMuted,
     marginBottom: 4,
@@ -126,7 +165,7 @@ export const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   footer: {
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.xs,
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
   },

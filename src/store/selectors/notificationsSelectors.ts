@@ -11,3 +11,7 @@ export const selectUnreadCount = createSelector(
   selectNotifications,
   (notifications) => notifications.filter((notification) => !notification.isRead).length,
 );
+
+/** Tab bar bell badge: the server's unread count once loaded, else derived from the loaded list. */
+export const selectBadgeUnreadCount = (state: RootState): number =>
+  state.notifications.unreadCount ?? selectUnreadCount(state);

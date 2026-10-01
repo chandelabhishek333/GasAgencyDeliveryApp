@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService } from '../../api/services/authService';
+import { userService } from '../../api/services/userService';
 import { STORAGE_KEYS } from '../../constants/storageKeys';
 import { getErrorMessage } from '../../utils/getErrorMessage';
 import { setPendingAuthToast } from '../../utils/pendingAuthToast';
@@ -71,7 +72,8 @@ export const loginWithPhone = createAsyncThunk<PendingOtp, LoginRequest, { rejec
 /**
  * Resends the duty login OTP for the in-flight session, refreshing
  * `pendingOtp` (new `otpToken`/`resendAfterSeconds`/`message`) on
- * success. Deliberately doesn't touch `status`/`error` — those drive
+ * success. The backend kills the old `request_id` as soon as a resend
+ * succeeds, so `otpToken` must be replaced — verify would fail with it. Deliberately doesn't touch `status`/`error` — those drive
  * the Verify button's own spinner and error text, and a resend
  * shouldn't flash either.
  */
@@ -85,7 +87,7 @@ export const resendOtp = createAsyncThunk<
     return rejectWithValue('OTP session expired. Please request a new code.');
   }
   try {
-    const response = await authService.resendOtp({ phone: pendingOtp.phone });
+    const response = await authService.resendOtp(pendingOtp.otpToken);
     return {
       phone: pendingOtp.phone,
       otpToken: response.otpToken,
@@ -112,13 +114,14 @@ export const verifyOtp = createAsyncThunk<
     return rejectWithValue('OTP session expired. Please request a new code.');
   }
   try {
-    const { accessToken, refreshToken } = await authService.verifyOtp({
+    const { accessToken, refreshToken, fcmToken } = await authService.verifyOtp({
       ...payload,
       otpToken: pendingOtp.otpToken,
     });
     await AsyncStorage.multiSet([
       [STORAGE_KEYS.ACCESS_TOKEN, accessToken],
       [STORAGE_KEYS.REFRESH_TOKEN, refreshToken],
+      [STORAGE_KEYS.FCM_TOKEN_SYNCED, fcmToken],
     ]);
     const profile = await authService.getProfile();
     return {
@@ -189,6 +192,56 @@ export const logoutUser = createAsyncThunk<void, void, { state: { auth: AuthStat
     // Set only once the local session is actually clearing — Login
     // picks this up on mount, after RootNavigator swaps back to AuthStack.
     setPendingAuthToast('Logged out successfully');
+  },
+);
+
+/**
+ * Signs the driver out of every device (POST /logout-all). Unlike
+ * logoutUser, this waits for the server: the whole point is revoking the
+ * *other* sessions, so if the call fails the driver stays signed in here
+ * and sees the error, rather than being told it worked when it didn't.
+ */
+export const logoutAll = createAsyncThunk<void, void, { rejectValue: string }>(
+  'auth/logoutAll',
+  async (_, { rejectWithValue }) => {
+    try {
+      await authService.logoutAll();
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+    await AsyncStorage.multiRemove([STORAGE_KEYS.ACCESS_TOKEN, STORAGE_KEYS.REFRESH_TOKEN]).catch(() => {});
+    setPendingAuthToast('Signed out of all devices');
+  },
+);
+
+/**
+ * Loads the live duty state for Home's toggle. The API has no GET
+ * /driver/status, so it comes from GET /driver/profile's `onDuty`.
+ */
+export const syncDutyStatus = createAsyncThunk<boolean, void, { rejectValue: string }>(
+  'auth/syncDutyStatus',
+  async (_, { rejectWithValue }) => {
+    try {
+      return (await userService.getProfile()).onDuty;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  },
+);
+
+/**
+ * Home's duty toggle: PATCH /driver/status. The switch flips immediately
+ * (pending) and flips back if the server refuses (rejected) — the arg is
+ * the new value, so the previous one is always its opposite.
+ */
+export const updateDutyStatus = createAsyncThunk<boolean, boolean, { rejectValue: string }>(
+  'auth/updateDutyStatus',
+  async (onDuty, { rejectWithValue }) => {
+    try {
+      return (await userService.updateDutyStatus(onDuty)).onDuty;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
   },
 );
 
@@ -266,7 +319,28 @@ const authSlice = createSlice({
       // local session (and its AsyncStorage tokens) is already cleared —
       // reset to a logged-out state either way.
       .addCase(logoutUser.fulfilled, () => initialState)
-      .addCase(logoutUser.rejected, () => initialState);
+      .addCase(logoutUser.rejected, () => initialState)
+      .addCase(logoutAll.fulfilled, () => initialState)
+      .addCase(syncDutyStatus.fulfilled, (state, action) => {
+        if (state.driver) {
+          state.driver.onDuty = action.payload;
+        }
+      })
+      .addCase(updateDutyStatus.pending, (state, action) => {
+        if (state.driver) {
+          state.driver.onDuty = action.meta.arg;
+        }
+      })
+      .addCase(updateDutyStatus.fulfilled, (state, action) => {
+        if (state.driver) {
+          state.driver.onDuty = action.payload;
+        }
+      })
+      .addCase(updateDutyStatus.rejected, (state, action) => {
+        if (state.driver) {
+          state.driver.onDuty = !action.meta.arg;
+        }
+      });
   },
 });
 

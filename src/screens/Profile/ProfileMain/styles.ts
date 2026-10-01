@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 const cardShadow = {
   shadowColor: Colors.black,
@@ -46,6 +46,7 @@ export const styles = StyleSheet.create({
   },
   avatarText: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.headingLg,
     color: Colors.primary,
   },
@@ -67,6 +68,7 @@ export const styles = StyleSheet.create({
   },
   name: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.subheading,
     color: Colors.textPrimary,
     marginTop: Spacing.xs,
@@ -85,6 +87,7 @@ export const styles = StyleSheet.create({
   },
   verifiedBadgeText: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption2,
     color: Colors.badgeDoneText,
   },
@@ -98,6 +101,7 @@ export const styles = StyleSheet.create({
   },
   idBadgeText: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.textMuted,
   },
@@ -129,6 +133,7 @@ export const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.bodySm,
   },
   statValueBlue: {
@@ -139,6 +144,7 @@ export const styles = StyleSheet.create({
   },
   statLabel: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.textMuted,
     textAlign: 'center',
@@ -185,6 +191,7 @@ export const styles = StyleSheet.create({
   },
   infoText: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.subtitle,
     color: Colors.textDark,
   },
@@ -200,6 +207,7 @@ export const styles = StyleSheet.create({
   },
   menuGroupTitle: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.textLight,
     textTransform: 'uppercase',
@@ -245,12 +253,14 @@ export const styles = StyleSheet.create({
   },
   menuLabel: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.subtitle,
     color: Colors.textDark,
     flexShrink: 1,
   },
   menuChevron: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.button,
     color: Colors.textPlaceholder,
   },
@@ -268,11 +278,27 @@ export const styles = StyleSheet.create({
     paddingVertical: Spacing.md,
     marginTop: Spacing.xs,
   },
+  logoutAllButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: 'transparent',
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1.5,
+    borderColor: Colors.errorRed,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  logoutAllButtonBusy: {
+    opacity: 0.6,
+  },
   logoutIcon: {
     fontSize: FontSize.body,
   },
   logoutLabel: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.label,
     color: Colors.errorRed,
   },

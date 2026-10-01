@@ -1,31 +1,30 @@
 /**
- * Expo (managed workflow / Expo Go) has no native build-time file
- * injection, so react-native-config can't work here — this was
- * switched to Expo's built-in env support instead. Only vars prefixed
- * EXPO_PUBLIC_ are exposed to client code; they're loaded automatically
- * from .env / .env.local / .env.development / .env.production at the
- * project root (see .env.example). The old env/ folder's per-file
- * convention was react-native-config-specific and no longer applies.
+ * Bare React Native CLI has no built-in env injection — `react-native-config`
+ * reads the root `.env` at native build time and exposes it here as `Config`.
+ * See .env.example for the var names and android/app/build.gradle for the
+ * Gradle hook that wires the native side up.
  *
  * Live API base path is versioned per-endpoint (e.g.
  * /api/v1/delivery/auth/...) rather than on the base URL — see
  * src/api/endpoints/.
  */
-const PLACEHOLDER_BASE_URL = 'https://api.mbga.com';
-const PLACEHOLDER_TIMEOUT_MS = 10000;
+import Config from 'react-native-config';
 
-export const API_BASE_URL: string = process.env.EXPO_PUBLIC_API_BASE_URL ?? PLACEHOLDER_BASE_URL;
-export const API_TIMEOUT: number = process.env.EXPO_PUBLIC_API_TIMEOUT
-  ? Number(process.env.EXPO_PUBLIC_API_TIMEOUT)
-  : PLACEHOLDER_TIMEOUT_MS;
+const PLACEHOLDER_BASE_URL = 'https://mbga.clocktales.com';
+const PLACEHOLDER_TIMEOUT_MS = 15000;
+
+// Trailing slashes stripped: endpoint paths all start with "/", and the
+// token-refresh call builds `${API_BASE_URL}${path}` by hand.
+export const API_BASE_URL: string = (Config.API_BASE_URL || PLACEHOLDER_BASE_URL).replace(/\/+$/, '');
+export const API_TIMEOUT: number = Config.API_TIMEOUT ? Number(Config.API_TIMEOUT) : PLACEHOLDER_TIMEOUT_MS;
 
 /**
- * Single switch for mock mode (src/api/mocks/). Defaults ON since no
- * backend is live yet — set EXPO_PUBLIC_USE_MOCK_DATA=false in .env
- * once real endpoints are ready, no code changes needed.
+ * Single switch for mock mode (src/api/mocks/). Defaults ON if the var
+ * is unset; .env sets it false now that the live API is wired up.
  *
- * Even with this off, a genuine network error still falls back to
- * mock data automatically (see errorInterceptor.ts) so the app never
- * dead-ends during preview if the API happens to be unreachable.
+ * Even with this off, dev builds fall back to mock data when a live
+ * non-auth call fails (network error, timeout, 404, 5xx) — see
+ * errorInterceptor.ts — so the app never dead-ends while endpoints are
+ * still being deployed. Release builds never serve mock data.
  */
-export const USE_MOCK_DATA: boolean = process.env.EXPO_PUBLIC_USE_MOCK_DATA !== 'false';
+export const USE_MOCK_DATA: boolean = Config.USE_MOCK_DATA !== 'false';

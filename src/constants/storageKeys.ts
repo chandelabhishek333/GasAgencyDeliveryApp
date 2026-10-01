@@ -6,6 +6,6 @@ export const STORAGE_KEYS = {
   DEVICE_ID: '@mbga/device_id',
   /** Real native FCM (Android) / APNs (iOS) device push token, persisted by notificationService. */
   FCM_TOKEN: '@mbga/fcm_token',
-  /** Fallback sent as `device.fcm_token` when permission is denied or the real token can't be fetched. */
-  FCM_TOKEN_PLACEHOLDER: '@mbga/fcm_token_placeholder',
+  /** The FCM token the server last received (OTP verify or /token/refresh) — compared against FCM_TOKEN to detect a rotation the server hasn't seen. */
+  FCM_TOKEN_SYNCED: '@mbga/fcm_token_synced',
 } as const;

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -15,6 +15,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.extraBold,
+    fontWeight: FontWeight.extraBold,
     fontSize: FontSize.heading,
     color: Colors.textPrimary,
     textAlign: 'center',

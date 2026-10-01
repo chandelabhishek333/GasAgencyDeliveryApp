@@ -1,6 +1,6 @@
 import React from 'react';
-import { Image, StatusBar, Text, TextInput, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Image, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components/common/Button';
 import { Toast } from '../../../components/common/Toast';
@@ -27,7 +27,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   } = useLogin(navigation);
 
   return (
-    <LinearGradient colors={[Colors.gradientLoginStart, Colors.gradientLoginEnd]} style={styles.container}>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={[Colors.gradientLoginStart, Colors.gradientLoginEnd]}
+        style={StyleSheet.absoluteFill}
+      />
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <Toast
@@ -81,6 +85,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
         </View>
         <Text style={styles.footer}>🔒 Authorized Delivery Personnel Only</Text>
       </SafeAreaView>
-    </LinearGradient>
+    </View>
   );
 };

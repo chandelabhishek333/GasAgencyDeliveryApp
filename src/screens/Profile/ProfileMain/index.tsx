@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { Header } from '../../../components/layout/Header';
 import { Colors } from '../../../theme';
 import { styles } from './styles';
@@ -43,6 +43,8 @@ export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation
     handleDeliveryHistory,
     handleHelpSupport,
     handleLogout,
+    handleLogoutAll,
+    isLoggingOutAll,
   } = useProfileMain(navigation);
 
   const menuGroups: MenuGroup[] = [
@@ -174,7 +176,20 @@ export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation
         {/* Section E — Logout */}
         <Pressable style={styles.logoutButton} onPress={handleLogout} accessibilityRole="button">
           <Text style={styles.logoutIcon}>🚪</Text>
-          <Text style={styles.logoutLabel}>Logout</Text>
+          <Text style={styles.logoutLabel}>Log Out from This Device</Text>
+        </Pressable>
+        <Pressable
+          style={[styles.logoutAllButton, isLoggingOutAll ? styles.logoutAllButtonBusy : null]}
+          onPress={handleLogoutAll}
+          disabled={isLoggingOutAll}
+          accessibilityRole="button"
+        >
+          {isLoggingOutAll ? (
+            <ActivityIndicator size="small" color={Colors.errorRed} />
+          ) : (
+            <Text style={styles.logoutIcon}>🌐</Text>
+          )}
+          <Text style={styles.logoutLabel}>Sign Out of All Devices</Text>
         </Pressable>
       </ScrollView>
     </View>

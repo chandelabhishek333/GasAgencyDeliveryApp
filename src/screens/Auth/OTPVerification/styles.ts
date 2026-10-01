@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -36,6 +36,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.black,
+    fontWeight: FontWeight.black,
     fontSize: FontSize.heading + 1.5,
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
@@ -52,13 +53,6 @@ export const styles = StyleSheet.create({
     width: '100%',
     marginBottom: Spacing.lg,
   },
-  errorText: {
-    fontFamily: FontFamily.medium,
-    fontSize: FontSize.small,
-    color: Colors.errorRed,
-    marginBottom: Spacing.sm,
-    textAlign: 'center',
-  },
   resend: {
     fontFamily: FontFamily.medium,
     fontSize: FontSize.small,
@@ -67,10 +61,12 @@ export const styles = StyleSheet.create({
   },
   resendHighlight: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     color: Colors.secondary,
   },
   resendLink: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     color: Colors.secondary,
   },
   securityCard: {
@@ -88,6 +84,7 @@ export const styles = StyleSheet.create({
   },
   securityText: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.footnote,
     color: Colors.textMuted,
   },

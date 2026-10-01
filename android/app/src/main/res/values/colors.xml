@@ -1,0 +1,4 @@
+<resources>
+    <!-- Matches the old Expo splash.backgroundColor — avoids a white flash before JS loads. -->
+    <color name="splashBackground">#EAF2FF</color>
+</resources>

@@ -8,7 +8,7 @@ export const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   fullScreen: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: Colors.overlayWhite,
     zIndex: 10,
   },

@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { BorderRadius, Colors, FontFamily, FontSize, Spacing } from '../../theme';
+import { BorderRadius, Colors, FontFamily, FontWeight, FontSize, Spacing } from '../../theme';
 
 export const styles = StyleSheet.create({
   container: {
@@ -32,11 +32,13 @@ export const styles = StyleSheet.create({
   },
   tabTextActive: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.small,
     color: Colors.white,
   },
   tabTextInactive: {
     fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
     fontSize: FontSize.small,
     color: Colors.textMuted,
   },
@@ -83,6 +85,7 @@ export const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.labelLg,
     color: Colors.textSecondary,
   },
