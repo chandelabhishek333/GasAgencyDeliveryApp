@@ -107,54 +107,53 @@ export const styles = StyleSheet.create({
   },
 
   // ---- Section B: Stats grid ----
-  statsGrid: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  statCard: {
-    flex: 1,
+  singleDeliveryCard: {
+    backgroundColor: Colors.bgWhite,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
+    borderColor: Colors.borderCard,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
     paddingVertical: Spacing.md,
-    paddingHorizontal: 4,
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 2,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  statCardBlue: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primaryBorder,
+  deliveryCardLabel: {
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
+    fontSize: FontSize.caption1,
+    color: Colors.textMuted,
+    letterSpacing: 0.8,
   },
-  statCardGreen: {
-    backgroundColor: Colors.successLight,
-    borderColor: Colors.successBorder,
+  deliveryCardSubtext: {
+    fontFamily: FontFamily.medium,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.label,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
-  statCardOrange: {
-    backgroundColor: Colors.secondaryLight,
-    borderColor: Colors.secondaryLightBorder,
+  deliveryCardCountGroup: {
+    alignItems: 'flex-end',
   },
-  statIcon: {
-    fontSize: FontSize.body,
-  },
-  statValue: {
+  deliveryCardCount: {
     fontFamily: FontFamily.black,
     fontWeight: FontWeight.black,
-    fontSize: FontSize.bodySm,
-  },
-  statValueBlue: {
+    fontSize: 28,
+    lineHeight: 32,
     color: Colors.primary,
   },
-  statValueGreen: {
-    color: Colors.successGreen,
-  },
-  statValueOrange: {
-    color: Colors.secondary,
-  },
-  statLabel: {
+  deliveryCardUnit: {
     fontFamily: FontFamily.semiBold,
     fontWeight: FontWeight.semiBold,
     fontSize: FontSize.caption2,
     color: Colors.textMuted,
-    textAlign: 'center',
   },
 
   // ---- Section C: Vehicle & hub info card ----
@@ -217,7 +216,6 @@ export const styles = StyleSheet.create({
     fontWeight: FontWeight.bold,
     fontSize: FontSize.caption1,
     color: Colors.textLight,
-    textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginLeft: 2,
   },

@@ -2,7 +2,6 @@ import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { Header } from '../../../components/layout/Header';
 import { Colors } from '../../../theme';
-import { formatRupees } from '../../../utils/formatRupees';
 import { styles } from './styles';
 import { useProfileMain } from './useProfileMain';
 import type { ProfileMainScreenProps } from './types';
@@ -99,28 +98,15 @@ export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation
           </View>
         </View>
 
-        {/* Section B — Today's shift stats (GET /driver/profile shiftStats) */}
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, styles.statCardBlue]}>
-            <Text style={styles.statIcon}>📦</Text>
-            <Text style={[styles.statValue, styles.statValueBlue]}>
-              {shiftStats ? shiftStats.completedDeliveriesToday : '—'}
-            </Text>
-            <Text style={styles.statLabel}>Delivered Today</Text>
+        {/* Section B — Deliveries completed today (GET /driver/profile shiftStats) */}
+        <View style={styles.singleDeliveryCard}>
+          <View>
+            <Text style={styles.deliveryCardLabel}>DELIVERIES COMPLETED</Text>
+            <Text style={styles.deliveryCardSubtext}>Today till now</Text>
           </View>
-          <View style={[styles.statCard, styles.statCardGreen]}>
-            <Text style={styles.statIcon}>💰</Text>
-            <Text style={[styles.statValue, styles.statValueGreen]} numberOfLines={1} adjustsFontSizeToFit>
-              {shiftStats ? formatRupees(shiftStats.cashCollectedToday) : '—'}
-            </Text>
-            <Text style={styles.statLabel}>Cash Collected</Text>
-          </View>
-          <View style={[styles.statCard, styles.statCardOrange]}>
-            <Text style={styles.statIcon}>🛢️</Text>
-            <Text style={[styles.statValue, styles.statValueOrange]}>
-              {shiftStats ? shiftStats.totalEmptiesCollectedToday : '—'}
-            </Text>
-            <Text style={styles.statLabel}>Empties Collected</Text>
+          <View style={styles.deliveryCardCountGroup}>
+            <Text style={styles.deliveryCardCount}>{shiftStats ? shiftStats.completedDeliveriesToday : '—'}</Text>
+            <Text style={styles.deliveryCardUnit}>Completed</Text>
           </View>
         </View>
 
