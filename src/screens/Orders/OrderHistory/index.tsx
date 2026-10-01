@@ -18,7 +18,7 @@ const PERIOD_TABS: Array<{ key: OrderHistoryPeriod; label: string }> = [
 
 /** Delivery History: period tabs + one card per finished delivery (GET /deliveries/history). */
 export const OrderHistoryScreen: React.FC<OrderHistoryScreenProps> = ({ navigation }) => {
-  const { period, setPeriod, history, isInitialLoading, error, handleBack } =
+  const { period, setPeriod, history, isInitialLoading, error, handleEntryPress, handleBack } =
     useOrderHistory(navigation);
 
   return (
@@ -61,7 +61,12 @@ export const OrderHistoryScreen: React.FC<OrderHistoryScreenProps> = ({ navigati
                     ? formatDeliveryDate(item.deliveryDate)
                     : '';
                 return (
-                  <View style={styles.card}>
+                  <Pressable
+                    onPress={() => handleEntryPress(item)}
+                    style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Order ${item.orderNumber}, ${item.customerName}`}
+                  >
                     <View style={styles.topRow}>
                       <View>
                         <Text style={styles.orderId}>#{item.orderNumber}</Text>
@@ -83,7 +88,7 @@ export const OrderHistoryScreen: React.FC<OrderHistoryScreenProps> = ({ navigati
                         </View>
                       ) : null}
                     </View>
-                  </View>
+                  </Pressable>
                 );
               }}
               ListEmptyComponent={

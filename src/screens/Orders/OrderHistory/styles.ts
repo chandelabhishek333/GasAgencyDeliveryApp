@@ -60,6 +60,9 @@ export const styles = StyleSheet.create({
     elevation: 2,
     gap: Spacing.sm,
   },
+  cardPressed: {
+    opacity: 0.7,
+  },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

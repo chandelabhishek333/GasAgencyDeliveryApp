@@ -5,7 +5,7 @@ import type { ApiDelivery } from '../mappers/deliveryMappers';
 import {
   MOCK_DRIVER,
   MOCK_NOTIFICATIONS,
-  MOCK_PAST_HISTORY,
+  MOCK_PAST_DELIVERIES,
   MOCK_SETTLEMENTS,
   MOCK_SHIFT_STATS,
   MOCK_TODAY,
@@ -73,7 +73,7 @@ const completedThisSession: string[] = [];
 
 /** Unknown ids throw like an unmapped route, so a live (non-mock) delivery's real error surfaces instead. */
 const findDelivery = (id: string): ApiDelivery => {
-  const delivery = mockDeliveries.find((item) => item.id === id);
+  const delivery = mockDeliveries.find((item) => item.id === id) ?? MOCK_PAST_DELIVERIES.find((item) => item.id === id);
   if (!delivery) {
     throw new Error(`[mock] No mock delivery ${id}`);
   }
@@ -182,12 +182,26 @@ const completedDetail = (id: string): CompletedDeliveryDetail => {
     return recorded;
   }
   const delivery = findDelivery(id);
+  if (delivery.status === 'failed') {
+    // Nothing changed hands on a failed delivery.
+    return {
+      id: delivery.id,
+      orderNumber: delivery.orderNumber,
+      status: 'failed',
+      deliveryDate: delivery.deliveryDate,
+      customer: delivery.customer,
+      deliveredItems: [],
+      emptyItems: [],
+      payment: null,
+      driverNotes: 'Customer unavailable — shop closed.',
+    };
+  }
   const totalAmount = delivery.billing?.totalPayableAmount ?? 0;
   const settlement: MockSettlement = MOCK_SETTLEMENTS[id] ?? { method: 'cash', split: 'full', amountPaid: totalAmount };
   return {
     id: delivery.id,
     orderNumber: delivery.orderNumber,
-    status: delivery.status === 'failed' ? 'failed' : 'completed',
+    status: 'completed',
     deliveryDate: delivery.deliveryDate,
     completedAt: delivery.completedAt ?? undefined,
     customer: delivery.customer,
@@ -238,7 +252,7 @@ const toHistoryEntry = (delivery: ApiDelivery): HistoryDeliveryEntry => {
 
 const DAY_MS = 24 * 60 * 60_000;
 
-/** GET /deliveries/history — today's finished deliveries (latest first), then MOCK_PAST_HISTORY, filtered by `period`. */
+/** GET /deliveries/history — today's finished deliveries (latest first), then MOCK_PAST_DELIVERIES, filtered by `period`. */
 const historyPage = (config: InternalAxiosRequestConfig): DeliveryHistoryPage => {
   const query = new URLSearchParams((config.url ?? '').split('?')[1] ?? '');
   const params = (config.params ?? {}) as { period?: string; page?: number; limit?: number };
@@ -251,9 +265,8 @@ const historyPage = (config: InternalAxiosRequestConfig): DeliveryHistoryPage =>
   };
   const finished = mockDeliveries
     .filter((delivery) => delivery.status === 'completed' || delivery.status === 'failed')
-    .sort((a, b) => recency(b.id) - recency(a.id))
-    .map(toHistoryEntry);
-  const all = [...finished, ...MOCK_PAST_HISTORY].filter((entry) => {
+    .sort((a, b) => recency(b.id) - recency(a.id));
+  const all = [...finished, ...MOCK_PAST_DELIVERIES].map(toHistoryEntry).filter((entry) => {
     const ageDays = entry.deliveryDate ? Math.round((Date.parse(MOCK_TODAY) - Date.parse(entry.deliveryDate)) / DAY_MS) : 0;
     return period === 'today' ? ageDays === 0 : period === 'week' ? ageDays < 7 : true;
   });

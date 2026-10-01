@@ -1,12 +1,14 @@
 import { useState } from 'react';
+import { Alert } from 'react-native';
 import { useNotifications } from '../../hooks/useNotifications';
 import type { Notification } from '../../types';
 
 type NotificationsTab = 'all' | 'unread';
 
 export const useNotificationsScreen = () => {
-  const { notifications, isLoading, unreadCount, markRead } = useNotifications();
+  const { notifications, isLoading, unreadCount, markRead, markAllRead } = useNotifications();
   const [tab, setTab] = useState<NotificationsTab>('all');
+  const [isMarkingAllRead, setMarkingAllRead] = useState(false);
 
   const filtered = tab === 'unread' ? notifications.filter((item) => !item.isRead) : notifications;
 
@@ -18,6 +20,20 @@ export const useNotificationsScreen = () => {
     // payloads carry a linked orderId.
   };
 
+  const handleMarkAllRead = async (): Promise<void> => {
+    if (isMarkingAllRead || unreadCount === 0) {
+      return;
+    }
+    setMarkingAllRead(true);
+    try {
+      await markAllRead().unwrap();
+    } catch (error) {
+      Alert.alert('Could not mark all as read', typeof error === 'string' ? error : 'Please try again.');
+    } finally {
+      setMarkingAllRead(false);
+    }
+  };
+
   return {
     tab,
     setTab,
@@ -25,5 +41,8 @@ export const useNotificationsScreen = () => {
     unreadCount,
     isLoading,
     handleNotificationPress,
+    /** Only offered while something is unread. */
+    canMarkAllRead: unreadCount > 0 && !isMarkingAllRead,
+    handleMarkAllRead,
   };
 };

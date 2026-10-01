@@ -2,6 +2,7 @@ import React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StatusBar, Text, View } from 'react-native';
 import { Header } from '../../../components/layout/Header';
 import { Colors } from '../../../theme';
+import { formatRupees } from '../../../utils/formatRupees';
 import { styles } from './styles';
 import { useProfileMain } from './useProfileMain';
 import type { ProfileMainScreenProps } from './types';
@@ -18,15 +19,9 @@ interface MenuGroup {
 }
 
 /**
- * Illustrative performance figures — `Driver` (src/types/driver.types.ts)
- * has no stats/hub/vehicle-type fields yet. Swap these for real data once
- * the backend exposes them (likely via `delivery_profile` on GET /me —
- * see useProfileMain.ts / auth.types.ts).
+ * Illustrative — the API has no vehicle-type or hub fields yet. Swap these
+ * for real data once the backend exposes them.
  */
-const PLACEHOLDER_STATS = {
-  totalDeliveries: '1,420',
-  onTimeRate: '98%',
-};
 const PLACEHOLDER_VEHICLE_TYPE = 'Tata Ace — LPG Carrier';
 const PLACEHOLDER_HUB = 'MBGA Central Depot — Gate 2';
 
@@ -34,6 +29,7 @@ const PLACEHOLDER_HUB = 'MBGA Central Depot — Gate 2';
 export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation }) => {
   const {
     driver,
+    shiftStats,
     initials,
     isVerified,
     driverIdLabel,
@@ -103,17 +99,28 @@ export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation
           </View>
         </View>
 
-        {/* Section B — Quick performance stats */}
+        {/* Section B — Today's shift stats (GET /driver/profile shiftStats) */}
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, styles.statCardBlue]}>
             <Text style={styles.statIcon}>📦</Text>
-            <Text style={[styles.statValue, styles.statValueBlue]}>{PLACEHOLDER_STATS.totalDeliveries}</Text>
-            <Text style={styles.statLabel}>Deliveries</Text>
+            <Text style={[styles.statValue, styles.statValueBlue]}>
+              {shiftStats ? shiftStats.completedDeliveriesToday : '—'}
+            </Text>
+            <Text style={styles.statLabel}>Delivered Today</Text>
           </View>
           <View style={[styles.statCard, styles.statCardGreen]}>
-            <Text style={styles.statIcon}>⏱️</Text>
-            <Text style={[styles.statValue, styles.statValueGreen]}>{PLACEHOLDER_STATS.onTimeRate}</Text>
-            <Text style={styles.statLabel}>On-Time</Text>
+            <Text style={styles.statIcon}>💰</Text>
+            <Text style={[styles.statValue, styles.statValueGreen]} numberOfLines={1} adjustsFontSizeToFit>
+              {shiftStats ? formatRupees(shiftStats.cashCollectedToday) : '—'}
+            </Text>
+            <Text style={styles.statLabel}>Cash Collected</Text>
+          </View>
+          <View style={[styles.statCard, styles.statCardOrange]}>
+            <Text style={styles.statIcon}>🛢️</Text>
+            <Text style={[styles.statValue, styles.statValueOrange]}>
+              {shiftStats ? shiftStats.totalEmptiesCollectedToday : '—'}
+            </Text>
+            <Text style={styles.statLabel}>Empties Collected</Text>
           </View>
         </View>
 

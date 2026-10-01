@@ -6,7 +6,8 @@ import {
   selectOrderHistoryStatus,
   selectOrdersError,
 } from '../../../store/selectors/ordersSelectors';
-import type { OrderHistoryPeriod } from '../../../types';
+import { ROUTES } from '../../../constants/routes';
+import type { HistoryDeliveryEntry, OrderHistoryPeriod } from '../../../types';
 import type { OrderHistoryScreenProps } from './types';
 
 export const useOrderHistory = (navigation: OrderHistoryScreenProps['navigation']) => {
@@ -26,6 +27,9 @@ export const useOrderHistory = (navigation: OrderHistoryScreenProps['navigation'
     history,
     isInitialLoading: status === 'loading' && history.length === 0,
     error,
+    /** Completed and failed alike open the read-only receipt (GET completed-detail). */
+    handleEntryPress: (entry: HistoryDeliveryEntry) =>
+      navigation.navigate(ROUTES.COMPLETED_ORDER_DETAIL, { orderId: entry.id }),
     handleBack: () => navigation.goBack(),
   };
 };

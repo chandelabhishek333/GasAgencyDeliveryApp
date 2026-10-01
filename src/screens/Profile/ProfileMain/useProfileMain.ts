@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchProfile } from '../../../store/slices/userSlice';
 import { logoutAll, logoutUser } from '../../../store/slices/authSlice';
@@ -21,9 +22,12 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
   const accountStatus = useAppSelector(selectAccountStatus);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
-  useEffect(() => {
-    dispatch(fetchProfile());
-  }, [dispatch]);
+  // Refetched on every focus, so today's shift stats are current after a delivery.
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(fetchProfile());
+    }, [dispatch]),
+  );
 
   // Prefer the freshly-fetched full profile; fall back to the lighter
   // session identity from login while it's loading.
@@ -56,6 +60,8 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
 
   return {
     driver,
+    /** Today's totals from GET /driver/profile — null until it loads (cards show "—"). */
+    shiftStats: profile?.shiftStats ?? null,
     initials: driver ? driver.avatarInitials ?? getInitials(driver.name) : '',
     isLoading: status === 'loading' && !driver,
     isVerified: accountStatus === 'ACTIVE',

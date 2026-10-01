@@ -30,13 +30,25 @@ const ICON_BOX_STYLE_BY_TYPE: Record<NotificationType, ViewStyle> = {
  * no back button (same as Home/Deliveries/Profile's own roots).
  */
 export const NotificationsScreen: React.FC<NotificationsScreenProps> = () => {
-  const { tab, setTab, notifications, unreadCount, isLoading, handleNotificationPress } =
-    useNotificationsScreen();
+  const {
+    tab,
+    setTab,
+    notifications,
+    unreadCount,
+    isLoading,
+    handleNotificationPress,
+    canMarkAllRead,
+    handleMarkAllRead,
+  } = useNotificationsScreen();
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.bgWhite} />
-      <Header title="Notifications" />
+      <Header
+        title="Notifications"
+        rightLabel={canMarkAllRead ? 'Mark all read' : undefined}
+        onRightPress={canMarkAllRead ? handleMarkAllRead : undefined}
+      />
 
       <View style={styles.content}>
         <View style={styles.tabsRow}>

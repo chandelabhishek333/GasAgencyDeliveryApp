@@ -66,6 +66,16 @@ test('full mock delivery flow maps through v3 mappers', () => {
 
   expect(toOrders(call('get', `${B}/deliveries/today`)).find((d) => d.id === 'ORD1257')!.status).toBe('completed');
 
+  // Every history row opens a completed-detail, including past and failed ones.
+  for (const entry of toHistoryPage(call('get', `${B}/deliveries/history?period=all`)).items) {
+    expect(toCompletedDetail(call('get', `${B}/deliveries/${entry.id}/completed-detail`)).id).toBe(entry.id);
+  }
+  const failed = toCompletedDetail(call('get', `${B}/deliveries/ORD1240/completed-detail`));
+  expect(failed).toMatchObject({ status: 'failed', payment: null, deliveredItems: [] });
+  expect(toCompletedDetail(call('get', `${B}/deliveries/ORD1251/completed-detail`)).payment).toMatchObject({
+    amountPaid: 8000, pendingBalance: 4 * 1800 + 2 * 4450 - 8000,
+  });
+
   expect(toInventory(call('get', `${B}/driver/inventory`)).stockByType).toHaveLength(3);
   expect(toInventory({ fullCylinderCount: 3, emptyCylinderCount: 1, activeDeliveries: 0 })).toMatchObject({ totalFullCylinders: 3, totalEmptyCylinders: 1 });
   expect(toDriver(call('get', `${B}/driver/profile`)).shiftStats!.cashCollectedToday).toBe(24250);

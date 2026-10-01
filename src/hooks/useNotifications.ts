@@ -1,6 +1,10 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { fetchNotifications, markNotificationRead } from '../store/slices/notificationsSlice';
+import {
+  fetchNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+} from '../store/slices/notificationsSlice';
 import {
   selectNotifications,
   selectNotificationsStatus,
@@ -9,7 +13,7 @@ import {
 
 /**
  * Fetches notifications on mount and exposes the list, unread count,
- * and mark-read. Shared by Home (bell badge) and NotificationsScreen
+ * mark-read and mark-all-read. Shared by Home (bell badge) and NotificationsScreen
  * (full list) so neither duplicates the fetch.
  */
 export const useNotifications = () => {
@@ -28,5 +32,7 @@ export const useNotifications = () => {
     unreadCount,
     isLoading: status === 'loading' && notifications.length === 0,
     markRead: (notificationId: string) => dispatch(markNotificationRead(notificationId)),
+    /** POST /notifications/read-all; resolves to the thunk's result so callers can unwrap() failures. */
+    markAllRead: () => dispatch(markAllNotificationsRead()),
   };
 };

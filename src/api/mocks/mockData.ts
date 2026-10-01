@@ -8,7 +8,6 @@ import type {
   DeliveryPaymentSplit,
   Driver,
   EmptyReturnItem,
-  HistoryDeliveryEntry,
   Notification,
   ShiftStats,
 } from '../../types';
@@ -84,6 +83,8 @@ interface MockSeed {
   previousBalance?: number;
   isLocationCaptured?: boolean;
   completedAt?: string;
+  /** Defaults to today. */
+  deliveryDate?: string;
 }
 
 let phoneSuffix = 10;
@@ -94,7 +95,7 @@ const buildDelivery = (seed: MockSeed): ApiDelivery => {
     id: seed.id,
     orderNumber: seed.id,
     status: seed.status,
-    deliveryDate: MOCK_TODAY,
+    deliveryDate: seed.deliveryDate ?? MOCK_TODAY,
     customer: {
       id: `cust-${seed.id}`,
       name: seed.name,
@@ -158,6 +159,13 @@ export interface MockSettlement {
 
 export const MOCK_SETTLEMENTS: Record<string, MockSettlement> = {
   ORD1253: { method: 'cash', split: 'full', amountPaid: 9000 },
+  ORD1252: { method: 'upi_qr', split: 'full', amountPaid: 9000 },
+  ORD1251: {
+    method: 'cash',
+    split: 'partial',
+    amountPaid: 8000,
+    emptiesCollected: { '19_KG_COMMERCIAL': 2, '47.5_KG_INDUSTRIAL': 2 },
+  },
   ORD1254: {
     method: 'upi_qr',
     split: 'partial',
@@ -167,24 +175,17 @@ export const MOCK_SETTLEMENTS: Record<string, MockSettlement> = {
   },
 };
 
-/** Older finished deliveries — only ever seen in Delivery History. */
-export const MOCK_PAST_HISTORY: HistoryDeliveryEntry[] = [
-  {
-    id: 'ORD1252', orderNumber: 'ORD1252', customerName: 'City Mart', status: 'completed',
-    deliveryDate: daysAgoDate(1), completedAt: '09:30 AM', totalDeliveredCount: 5, totalEmptiesCount: 5,
-    itemsSummary: '5 × 19 KG', payment: { method: 'upi_qr', amount: 9000, status: 'FULL' },
-  },
-  {
-    id: 'ORD1251', orderNumber: 'ORD1251', customerName: 'Hotel Crown', status: 'completed',
-    deliveryDate: daysAgoDate(3), completedAt: '08:45 AM', totalDeliveredCount: 6, totalEmptiesCount: 4,
-    itemsSummary: '4 × 19 KG, 2 × 47.5 KG', payment: { method: 'cash', amount: 8000, status: 'PARTIAL' },
-  },
-  {
-    id: 'ORD1240', orderNumber: 'ORD1240', customerName: 'Shree Caterers', status: 'failed',
-    deliveryDate: daysAgoDate(12), totalDeliveredCount: 0, totalEmptiesCount: 0,
-    itemsSummary: '3 × 19 KG', payment: null,
-  },
-];
+/** Older finished deliveries — only seen in Delivery History (and their Completed Order Details). */
+export const MOCK_PAST_DELIVERIES: ApiDelivery[] = (
+  [
+    { id: 'ORD1252', name: 'City Mart', address: 'Sector 16, Noida', status: 'completed', distanceKm: 1.6,
+      lines: [['19_KG_COMMERCIAL', 5]], completedAt: '09:30 AM', deliveryDate: daysAgoDate(1) },
+    { id: 'ORD1251', name: 'Hotel Crown', address: 'Sector 12, Noida', status: 'completed', distanceKm: 2.4,
+      lines: [['19_KG_COMMERCIAL', 4], ['47.5_KG_INDUSTRIAL', 2]], completedAt: '08:45 AM', deliveryDate: daysAgoDate(3) },
+    { id: 'ORD1240', name: 'Shree Caterers', address: 'Sector 22, Noida', status: 'failed', distanceKm: 3.0,
+      lines: [['19_KG_COMMERCIAL', 3]], deliveryDate: daysAgoDate(12) },
+  ] as MockSeed[]
+).map(buildDelivery);
 
 const minutesAgo = (n: number): string => new Date(Date.now() - n * 60_000).toISOString();
 const hoursAgo = (n: number): string => new Date(Date.now() - n * 60 * 60_000).toISOString();

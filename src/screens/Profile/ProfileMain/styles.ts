@@ -128,6 +128,10 @@ export const styles = StyleSheet.create({
     backgroundColor: Colors.successLight,
     borderColor: Colors.successBorder,
   },
+  statCardOrange: {
+    backgroundColor: Colors.secondaryLight,
+    borderColor: Colors.secondaryLightBorder,
+  },
   statIcon: {
     fontSize: FontSize.body,
   },
@@ -141,6 +145,9 @@ export const styles = StyleSheet.create({
   },
   statValueGreen: {
     color: Colors.successGreen,
+  },
+  statValueOrange: {
+    color: Colors.secondary,
   },
   statLabel: {
     fontFamily: FontFamily.semiBold,
