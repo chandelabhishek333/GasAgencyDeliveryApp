@@ -34,7 +34,7 @@ export const useOrderList = (navigation: OrderListScreenProps['navigation']) => 
   // (a failed delivery must not offer "Out for Delivery" again).
   const handleOrderPress = (order: Order): void => {
     switch (order.status) {
-      case 'in_progress':
+      case 'out_for_delivery':
         dispatch(setActiveDelivery(order));
         navigation.navigate(ROUTES.ACTIVE_DELIVERY);
         return;

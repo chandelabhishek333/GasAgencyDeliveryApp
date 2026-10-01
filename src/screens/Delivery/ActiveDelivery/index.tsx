@@ -11,10 +11,11 @@ import type { ActiveDeliveryScreenProps } from './types';
 /** Rough urban-driving estimate (~3 min/km) — order.distanceKm is real mock data, this heuristic is not. */
 const estimateEtaMinutes = (distanceKm: number): number => Math.max(1, Math.round(distanceKm * 3));
 
-/** Screen 7 — Start Delivery: static map illustration + location verify. */
+/** Start Delivery: static map illustration + POST verify-location. */
 export const ActiveDeliveryScreen: React.FC<ActiveDeliveryScreenProps> = ({ navigation }) => {
   const {
     activeDelivery,
+    isLocationCaptured,
     isLoading,
     error,
     handleAtLocation,
@@ -49,18 +50,22 @@ export const ActiveDeliveryScreen: React.FC<ActiveDeliveryScreenProps> = ({ navi
                 </View>
               </View>
               <View style={styles.mapLabelChip}>
-                <Text style={styles.mapLabelText}>{activeDelivery.address}</Text>
+                <Text style={styles.mapLabelText}>{activeDelivery.customer.address}</Text>
               </View>
             </View>
 
-            <Text style={styles.successText}>You are near the delivery location.</Text>
+            <Text style={styles.successText}>
+              {isLocationCaptured
+                ? "Customer's location is on file — tap below once you're there."
+                : "First delivery here — your current location will be saved as the customer's location."}
+            </Text>
 
             <View style={styles.addressCard}>
               <View style={styles.addressHeaderRow}>
                 <Text style={styles.locationIcon}>📍</Text>
                 <View style={styles.addressInfo}>
-                  <Text style={styles.locationName}>{activeDelivery.customerName}</Text>
-                  <Text style={styles.locationAddress}>{activeDelivery.address}</Text>
+                  <Text style={styles.locationName}>{activeDelivery.customer.name}</Text>
+                  <Text style={styles.locationAddress}>{activeDelivery.customer.address}</Text>
                 </View>
               </View>
 

@@ -17,36 +17,22 @@ import { getGreeting } from '../../utils/getGreeting';
 import { getInitials } from '../../utils/getInitials';
 import { formatDeliveryDate, formatShortDate } from '../../utils/formatShortDate';
 import { ROUTES } from '../../constants/routes';
-import { cylinderSizeKey } from '../../utils/cylinderSize';
+import { formatRupees } from '../../utils/formatRupees';
 import type { OrderItem } from '../../types';
 import type { CylinderRow, HomeScreenProps, ShiftSummary, VehicleStock } from './types';
 
 const formatQty = (item: OrderItem): string => `${item.quantity} × ${item.label}`;
 
 /**
- * One row per delivered cylinder type, each paired with the empty
- * collected for it: [{ "5 × 19 KG Commercial", "(Collect: 5 × 19 KG Empty)" }, …].
- * Items carry no explicit link, so an empty is matched by the cylinder
- * size at the start of its label, falling back to list order. Empties
- * left unmatched still get a row of their own, so nothing is dropped.
+ * One row per delivered cylinder type, each paired with the empties to
+ * collect for the same cylinderType: [{ "5 × 19 KG Commercial", "(Collect: 6 × 19 KG Empty)" }, …].
+ * Empties with no delivered counterpart (a previous due only) get a row of their own.
  */
 const buildCylinderRows = (items: OrderItem[]): CylinderRow[] => {
   const cylinders = items.filter((item) => item.kind === 'cylinderDelivery');
-  const unmatchedEmpties = items.filter((item) => item.kind === 'emptyCollection');
-  const deliveredSizes = new Set(cylinders.map((item) => cylinderSizeKey(item.label)).filter((size) => size !== null));
-
-  const takeEmptyFor = (cylinder: OrderItem): OrderItem | undefined => {
-    const size = cylinderSizeKey(cylinder.label);
-    let index = size ? unmatchedEmpties.findIndex((empty) => cylinderSizeKey(empty.label) === size) : -1;
-    if (index === -1) {
-      // No size match — fall back to the first empty whose size no delivered type claims.
-      index = unmatchedEmpties.findIndex((empty) => !deliveredSizes.has(cylinderSizeKey(empty.label) ?? ''));
-    }
-    return index === -1 ? undefined : unmatchedEmpties.splice(index, 1)[0];
-  };
-
+  const empties = items.filter((item) => item.kind === 'emptyCollection');
   const rows: CylinderRow[] = cylinders.map((cylinder) => {
-    const empty = takeEmptyFor(cylinder);
+    const empty = empties.find((item) => item.cylinderType === cylinder.cylinderType);
     return {
       key: cylinder.id,
       delivery: formatQty(cylinder),
@@ -54,16 +40,17 @@ const buildCylinderRows = (items: OrderItem[]): CylinderRow[] => {
     };
   });
   return rows.concat(
-    unmatchedEmpties.map((empty) => ({ key: empty.id, delivery: null, collect: `(Collect: ${formatQty(empty)})` })),
+    empties
+      .filter((empty) => !cylinders.some((cylinder) => cylinder.cylinderType === empty.cylinderType))
+      .map((empty) => ({ key: empty.id, delivery: null, collect: `(Collect: ${formatQty(empty)})` })),
   );
 };
 
-// TODO: confirm endpoint — no shift-tracking service exists yet
-// either. Placeholder values until a real one is specified.
-const PLACEHOLDER_SHIFT_SUMMARY: ShiftSummary = {
+// TODO: confirm endpoint — the API has no distance/time-on-road tracking.
+// Placeholder values until one is specified; cash to collect is real (below).
+const PLACEHOLDER_SHIFT_SUMMARY: Omit<ShiftSummary, 'cashToCollect'> = {
   distanceCovered: '18.5 km',
   timeOnRoad: '2 hrs 15m',
-  cashToCollect: '₹14,250',
 };
 
 export const useHomeScreen = (navigation: HomeScreenProps['navigation']) => {
@@ -96,9 +83,14 @@ export const useHomeScreen = (navigation: HomeScreenProps['navigation']) => {
   );
 
   const vehicleStock: VehicleStock = {
-    truckFullStock: inventory?.fullCylinderCount ?? null,
-    emptyCollected: inventory?.emptyCylinderCount ?? null,
+    truckFullStock: inventory?.totalFullCylinders ?? null,
+    emptyCollected: inventory?.totalEmptyCylinders ?? null,
   };
+
+  // Still to collect today: the payable on every delivery not yet completed or failed.
+  const cashToCollect = today
+    .filter((delivery) => delivery.status === 'pending' || delivery.status === 'out_for_delivery')
+    .reduce((total, delivery) => total + delivery.billing.totalPayableAmount, 0);
 
   const todayDate = formatShortDate(new Date());
 
@@ -114,7 +106,7 @@ export const useHomeScreen = (navigation: HomeScreenProps['navigation']) => {
     nextDelivery,
     cylinderRows: nextDelivery ? buildCylinderRows(nextDelivery.items) : [],
     vehicleStock,
-    shiftSummary: PLACEHOLDER_SHIFT_SUMMARY,
+    shiftSummary: { ...PLACEHOLDER_SHIFT_SUMMARY, cashToCollect: formatRupees(cashToCollect) },
     handleToggleDuty,
     handleViewAllPress: () => navigation.navigate(ROUTES.ORDER_LIST),
     handleNextDeliveryPress: () => {

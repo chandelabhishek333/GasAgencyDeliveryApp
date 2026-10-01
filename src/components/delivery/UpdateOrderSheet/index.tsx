@@ -4,31 +4,36 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../common/Button';
 import { QuantityStepper } from '../QuantityStepper';
 import { CYLINDER_CATALOG } from '../../../constants/cylinderCatalog';
-import { cylinderSizeKey } from '../../../utils/cylinderSize';
 import { styles } from './styles';
 import type { UpdateOrderSheetProps } from './types';
 
-/** Catalog label -> the order's current quantity for that size (0 when not in the order). */
-const countsFromOrder = (currentItems: UpdateOrderSheetProps['currentItems']): Record<string, number> =>
+type SheetRow = { cylinderType: string; label: string };
+
+/** Every catalog type, plus any type already on the order that the catalog doesn't list (so it's never dropped). */
+const rowsFor = (currentItems: UpdateOrderSheetProps['currentItems']): SheetRow[] => [
+  ...CYLINDER_CATALOG,
+  ...currentItems.filter((item) => !CYLINDER_CATALOG.some((entry) => entry.cylinderType === item.cylinderType)),
+];
+
+/** cylinderType -> the order's current quantity (0 when not in the order). */
+const countsFromOrder = (rows: SheetRow[], currentItems: UpdateOrderSheetProps['currentItems']): Record<string, number> =>
   Object.fromEntries(
-    CYLINDER_CATALOG.map((catalogItem) => {
-      const size = cylinderSizeKey(catalogItem.label);
-      const match = currentItems.find((item) => cylinderSizeKey(item.label) === size);
-      return [catalogItem.label, match?.quantity ?? 0];
-    }),
+    rows.map((row) => [row.cylinderType, currentItems.find((item) => item.cylinderType === row.cylinderType)?.quantity ?? 0]),
   );
 
 /**
  * Bottom sheet for editing the active delivery's cylinder types: every
  * catalog type has a stepper, pre-filled with the order's current count,
  * so the driver can change existing types, add new ones, or set one to 0
- * to remove it. "Confirm Update" applies the whole set at once and is
- * enabled only when something changed and at least one cylinder remains.
+ * to remove it. "Confirm Update" sends the whole set to PUT update-items
+ * (the server re-prices the order) and is enabled only when something
+ * changed and at least one cylinder remains.
  */
 export const UpdateOrderSheet: React.FC<UpdateOrderSheetProps> = ({
   visible,
   orderNumber,
   currentItems,
+  submitting = false,
   onClose,
   onConfirm,
 }) => {
@@ -39,15 +44,16 @@ export const UpdateOrderSheet: React.FC<UpdateOrderSheetProps> = ({
   // Re-seed from the order each time the sheet opens (not on every parent re-render).
   useEffect(() => {
     if (visible) {
-      const seeded = countsFromOrder(currentItems);
+      const seeded = countsFromOrder(rowsFor(currentItems), currentItems);
       setCounts(seeded);
       setInitialCounts(seeded);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  const selections = CYLINDER_CATALOG.map((item) => ({ ...item, quantity: counts[item.label] ?? 0 }));
-  const hasChanges = selections.some((item) => item.quantity !== (initialCounts[item.label] ?? 0));
+  const rows = rowsFor(currentItems);
+  const selections = rows.map(({ cylinderType, label }) => ({ cylinderType, label, quantity: counts[cylinderType] ?? 0 }));
+  const hasChanges = selections.some((item) => item.quantity !== (initialCounts[item.cylinderType] ?? 0));
   const hasCylinders = selections.some((item) => item.quantity > 0);
 
   return (
@@ -69,12 +75,12 @@ export const UpdateOrderSheet: React.FC<UpdateOrderSheetProps> = ({
           </View>
 
           <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-            {CYLINDER_CATALOG.map((item) => (
-              <View key={item.label} style={styles.row}>
+            {rows.map((item) => (
+              <View key={item.cylinderType} style={styles.row}>
                 <Text style={styles.rowLabel}>{item.label}</Text>
                 <QuantityStepper
-                  value={counts[item.label] ?? 0}
-                  onChange={(quantity) => setCounts((current) => ({ ...current, [item.label]: quantity }))}
+                  value={counts[item.cylinderType] ?? 0}
+                  onChange={(quantity) => setCounts((current) => ({ ...current, [item.cylinderType]: quantity }))}
                   min={0}
                 />
               </View>
@@ -84,6 +90,7 @@ export const UpdateOrderSheet: React.FC<UpdateOrderSheetProps> = ({
           <Button
             label="Confirm Update"
             onPress={() => onConfirm(selections)}
+            loading={submitting}
             disabled={!hasChanges || !hasCylinders}
           />
         </View>

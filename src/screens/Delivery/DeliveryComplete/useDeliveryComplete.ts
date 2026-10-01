@@ -7,15 +7,12 @@ import type { DeliveryCompleteScreenProps } from './types';
 export const useDeliveryComplete = (navigation: DeliveryCompleteScreenProps['navigation']) => {
   const dispatch = useAppDispatch();
   const summary = useAppSelector(selectLastCompletedSummary);
-  // The just-completed delivery is already filtered out of `today` by
-  // verifyActiveDeliveryOtp.fulfilled, so this genuinely points to
-  // whatever's next.
+  // verifyActiveDeliveryOtp.fulfilled already marked the just-finished
+  // delivery completed in `today`, so this points to whatever's next.
   const nextDelivery = useAppSelector(selectNextDelivery);
 
   const payment = summary?.payment ?? null;
   const isPartial = payment?.split === 'partial';
-  // What the customer still owes after a partial collection; 0 for a full one.
-  const pendingBalance = payment && isPartial ? Math.max(0, payment.payableAmount - payment.amount) : 0;
 
   /** Jumps straight into the next pending delivery's flow if one exists, else back to the list. */
   const handleViewNextDelivery = (): void => {
@@ -36,10 +33,13 @@ export const useDeliveryComplete = (navigation: DeliveryCompleteScreenProps['nav
   return {
     summary,
     deliveredItems: summary?.deliveredItems ?? [],
-    emptyItems: summary?.emptyItems ?? [],
+    emptyItems: summary?.emptyCollectedItems ?? [],
+    /** Empties not returned this time — the server added them to the customer's pending due. */
+    emptiesAddedToDue: summary?.emptyDueSummary.addedToCustomerPendingDue ?? 0,
     payment,
     isPartial,
-    pendingBalance,
+    // What the customer still owes after a partial collection; 0 for a full one.
+    pendingBalance: payment?.pendingBalance ?? 0,
     handleViewNextDelivery,
     handleBackToDeliveries,
     handleBack: () => navigation.goBack(),

@@ -203,6 +203,13 @@ export const styles = StyleSheet.create({
     padding: Spacing.md,
     gap: 4,
   },
+  qrBoxExpired: {
+    opacity: 0.35,
+  },
+  qrImage: {
+    width: 180,
+    height: 180,
+  },
   qrBrand: {
     fontFamily: FontFamily.extraBold,
     fontWeight: FontWeight.extraBold,

@@ -57,7 +57,7 @@ export const useCustomerOTP = (navigation: CustomerOTPScreenProps['navigation'])
 
   const handleCallCustomer = (): void => {
     if (activeDelivery) {
-      Linking.openURL(`tel:${activeDelivery.customerPhone}`);
+      Linking.openURL(`tel:${activeDelivery.customer.phone}`);
     }
   };
 

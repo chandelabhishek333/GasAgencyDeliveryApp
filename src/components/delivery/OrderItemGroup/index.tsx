@@ -12,7 +12,7 @@ export const OrderItemGroup: React.FC<OrderItemGroupProps> = ({ title, items, qt
   <View style={styles.group} testID={testID}>
     <Text style={styles.title}>{title}</Text>
     {items.map((item, index) => (
-      <View key={item.id} style={[styles.line, index > 0 ? styles.lineDivider : null]}>
+      <View key={`${item.cylinderType}-${index}`} style={[styles.line, index > 0 ? styles.lineDivider : null]}>
         <Text style={styles.label}>{item.label}</Text>
         <Text style={styles.qty}>
           Qty: {item.quantity}

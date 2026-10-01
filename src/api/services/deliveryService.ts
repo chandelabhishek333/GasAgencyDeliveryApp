@@ -1,82 +1,104 @@
 import { apiClient } from '../client';
 import { DELIVERY_ENDPOINTS } from '../endpoints/deliveryEndpoints';
-import { buildConfirmNote, toClockTime, toOrder, toOrders, unwrapResponse } from '../mappers/deliveryMappers';
-import type { ApiDelivery } from '../mappers/deliveryMappers';
+import {
+  toCompletedDetail,
+  toConfirmResponse,
+  toDeliverySummary,
+  toGenerateQr,
+  toHistoryPage,
+  toOrders,
+  toOutForDelivery,
+  toSingleOrder,
+  toVerifyLocation,
+} from '../mappers/deliveryMappers';
 import { withDevMockFallback } from '../mocks/devFallback';
 import type {
+  CompletedDeliveryDetail,
+  ConfirmDeliveryRequest,
+  ConfirmDeliveryResponse,
   Delivery,
-  DeliveryConfirmRequest,
-  DeliveryConfirmResponse,
-  DeliveryStartRequest,
-  DeliveryStartResponse,
+  DeliveryHistoryPage,
+  DeliveryHistoryParams,
   DeliverySummary,
+  GenerateQrRequest,
+  GenerateQrResponse,
+  OutForDeliveryResponse,
+  UpdateOrderItemsRequest,
   VerifyCustomerOtpRequest,
+  VerifyLocationRequest,
+  VerifyLocationResponse,
 } from '../../types';
 
+const get = (url: string, params?: object) => (): Promise<unknown> =>
+  apiClient.get(url, { params }).then((response) => response.data);
+
+const post = (url: string, body?: unknown) => (): Promise<unknown> =>
+  apiClient.post(url, body ?? {}).then((response) => response.data);
+
 /**
- * Delivery domain — today's assigned deliveries and the active
- * delivery workflow (location verify -> confirm quantities -> customer OTP).
- * Responses go through src/api/mappers (live bare shapes and mock
- * envelopes alike). In dev builds each call falls back to mock data if
- * the real endpoint fails or is empty (see withDevMockFallback).
+ * Delivery domain — the driver's whole delivery lifecycle, in order:
+ * today's list -> out for delivery -> verify location -> (update items)
+ * -> (generate QR) -> confirm -> customer OTP -> completed detail /
+ * history. Responses go through src/api/mappers. In dev builds each call
+ * falls back to the mocks if the live one fails (see withDevMockFallback).
  */
 export const deliveryService = {
+  /** GET /deliveries/today */
   async getTodayDeliveries(): Promise<Delivery[]> {
-    return withDevMockFallback('get', DELIVERY_ENDPOINTS.TODAY, async () => {
-      const response = await apiClient.get(DELIVERY_ENDPOINTS.TODAY);
-      return toOrders(response.data);
-    });
+    const url = DELIVERY_ENDPOINTS.TODAY;
+    return withDevMockFallback({ method: 'get', url }, get(url), toOrders);
   },
 
-  async getDeliveryById(deliveryId: string): Promise<Delivery> {
-    return withDevMockFallback('get', DELIVERY_ENDPOINTS.DETAIL(deliveryId), async () => {
-      const response = await apiClient.get(DELIVERY_ENDPOINTS.DETAIL(deliveryId));
-      return toOrder(unwrapResponse<ApiDelivery | Delivery>(response.data));
-    });
+  /** POST /deliveries/{id}/out-for-delivery — pending -> out_for_delivery. */
+  async markOutForDelivery(deliveryId: string): Promise<OutForDeliveryResponse> {
+    const url = DELIVERY_ENDPOINTS.OUT_FOR_DELIVERY(deliveryId);
+    return withDevMockFallback({ method: 'post', url }, post(url), toOutForDelivery);
   },
 
-  async startDelivery(
-    deliveryId: string,
-    payload: DeliveryStartRequest,
-  ): Promise<DeliveryStartResponse> {
-    return withDevMockFallback('post', DELIVERY_ENDPOINTS.START(deliveryId), async () => {
-      const response = await apiClient.post(DELIVERY_ENDPOINTS.START(deliveryId), payload);
-      const data = unwrapResponse<{ isAtLocation: boolean; distanceMetersFromDestination: number | null }>(
-        response.data,
-      );
-      return {
-        isAtLocation: data.isAtLocation,
-        distanceMetersFromDestination: data.distanceMetersFromDestination ?? 0,
-      };
-    });
+  /** POST /deliveries/{id}/verify-location — also locks the customer's coordinates the first time. */
+  async verifyLocation(deliveryId: string, payload: VerifyLocationRequest): Promise<VerifyLocationResponse> {
+    const url = DELIVERY_ENDPOINTS.VERIFY_LOCATION(deliveryId);
+    return withDevMockFallback({ method: 'post', url, data: payload }, post(url, payload), toVerifyLocation);
   },
 
-  // The live body is { deliveredQuantity, emptyCollectedQuantity, note }:
-  // the per-type breakdown has no field, and payment rides at the front
-  // of `note` until the API gets payment fields (see buildConfirmNote).
-  async confirmDelivery(
-    deliveryId: string,
-    payload: DeliveryConfirmRequest,
-  ): Promise<DeliveryConfirmResponse> {
-    return withDevMockFallback('post', DELIVERY_ENDPOINTS.CONFIRM(deliveryId), async () => {
-      const response = await apiClient.post(DELIVERY_ENDPOINTS.CONFIRM(deliveryId), {
-        deliveredQuantity: payload.deliveredQuantity,
-        emptyCollectedQuantity: payload.emptyCollectedQuantity,
-        note: buildConfirmNote(payload.notes, payload.payment),
-      });
-      const data = unwrapResponse<DeliveryConfirmResponse>(response.data);
-      return { deliveryId: data.deliveryId, customerOtpRequired: data.customerOtpRequired };
-    });
+  /** PUT /deliveries/{id}/update-items — answers with the recalculated delivery (items, empties, billing). */
+  async updateOrderItems(deliveryId: string, payload: UpdateOrderItemsRequest): Promise<Delivery> {
+    const url = DELIVERY_ENDPOINTS.UPDATE_ITEMS(deliveryId);
+    return withDevMockFallback(
+      { method: 'put', url, data: payload },
+      () => apiClient.put(url, payload).then((response) => response.data),
+      toSingleOrder,
+    );
   },
 
-  async verifyCustomerOtp(
-    deliveryId: string,
-    payload: VerifyCustomerOtpRequest,
-  ): Promise<DeliverySummary> {
-    return withDevMockFallback('post', DELIVERY_ENDPOINTS.VERIFY_CUSTOMER_OTP(deliveryId), async () => {
-      const response = await apiClient.post(DELIVERY_ENDPOINTS.VERIFY_CUSTOMER_OTP(deliveryId), payload);
-      const data = unwrapResponse<DeliverySummary>(response.data);
-      return { ...data, completedAt: toClockTime(data.completedAt) };
-    });
+  /** POST /deliveries/{id}/generate-qr — a dynamic UPI QR for the exact amount. */
+  async generatePaymentQr(deliveryId: string, payload: GenerateQrRequest): Promise<GenerateQrResponse> {
+    const url = DELIVERY_ENDPOINTS.GENERATE_QR(deliveryId);
+    return withDevMockFallback({ method: 'post', url, data: payload }, post(url, payload), toGenerateQr);
+  },
+
+  /** POST /deliveries/{id}/confirm — sends the customer their OTP (in-app notification). */
+  async confirmDelivery(deliveryId: string, payload: ConfirmDeliveryRequest): Promise<ConfirmDeliveryResponse> {
+    const url = DELIVERY_ENDPOINTS.CONFIRM(deliveryId);
+    return withDevMockFallback({ method: 'post', url, data: payload }, post(url, payload), toConfirmResponse);
+  },
+
+  /** POST /deliveries/{id}/verify-customer-otp — completes the delivery and returns its receipt. */
+  async verifyCustomerOtp(deliveryId: string, payload: VerifyCustomerOtpRequest): Promise<DeliverySummary> {
+    const url = DELIVERY_ENDPOINTS.VERIFY_CUSTOMER_OTP(deliveryId);
+    return withDevMockFallback({ method: 'post', url, data: payload }, post(url, payload), toDeliverySummary);
+  },
+
+  /** GET /deliveries/{id}/completed-detail */
+  async getCompletedDeliveryDetail(deliveryId: string): Promise<CompletedDeliveryDetail> {
+    const url = DELIVERY_ENDPOINTS.COMPLETED_DETAIL(deliveryId);
+    return withDevMockFallback({ method: 'get', url }, get(url), toCompletedDetail);
+  },
+
+  /** GET /deliveries/history?period=&page=&limit= */
+  async getDeliveryHistory(params: DeliveryHistoryParams = {}): Promise<DeliveryHistoryPage> {
+    const url = DELIVERY_ENDPOINTS.HISTORY;
+    const query = { period: params.period ?? 'all', page: params.page ?? 1, limit: params.limit ?? 20 };
+    return withDevMockFallback({ method: 'get', url: `${url}?period=${query.period}` }, get(url, query), toHistoryPage);
   },
 };

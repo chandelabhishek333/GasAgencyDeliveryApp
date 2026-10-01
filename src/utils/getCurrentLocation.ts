@@ -1,13 +1,13 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
-import type { DeliveryStartRequest } from '../types';
+import type { VerifyLocationRequest } from '../types';
 
 /**
  * Fixed near-Sector-61-Noida coordinate (matches the mock delivery
  * addresses) used whenever the device denies/lacks location access, so
  * Screen 7's "I'm at the Location" step never blocks on GPS.
  */
-const FALLBACK_COORDINATES: DeliveryStartRequest = { latitude: 28.5921, longitude: 77.386 };
+const FALLBACK_COORDINATES: VerifyLocationRequest = { latitude: 28.5921, longitude: 77.386 };
 
 /**
  * Unlike Expo's `Location.requestForegroundPermissionsAsync`, bare RN has
@@ -30,13 +30,13 @@ const hasLocationPermission = async (): Promise<boolean> => {
 };
 
 /** Best-effort device GPS fix for the active-delivery location-verify step; never throws. */
-export const getCurrentLocation = async (): Promise<DeliveryStartRequest> => {
+export const getCurrentLocation = async (): Promise<VerifyLocationRequest> => {
   try {
     const granted = await hasLocationPermission();
     if (!granted) {
       return FALLBACK_COORDINATES;
     }
-    return await new Promise<DeliveryStartRequest>((resolve) => {
+    return await new Promise<VerifyLocationRequest>((resolve) => {
       Geolocation.getCurrentPosition(
         (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
         () => resolve(FALLBACK_COORDINATES),

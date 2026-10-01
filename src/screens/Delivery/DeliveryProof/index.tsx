@@ -35,6 +35,7 @@ const QuantityCard: React.FC<QuantityCardProps> = ({ title, items, countLabel, q
             <Text style={styles.itemLabel}>{item.label}</Text>
             <Text style={styles.itemSub}>
               {countLabel}: {item.quantity}
+              {item.customerPreviousDue ? ` (${item.currentOrderQuantity ?? 0} + ${item.customerPreviousDue} previous due)` : ''}
             </Text>
           </View>
           {onChange ? (
@@ -83,6 +84,10 @@ export const DeliveryProofScreen: React.FC<DeliveryProofScreenProps> = ({ naviga
     setPaymentSplit,
     setPartialAmountInput,
     qrAmount,
+    paymentQr,
+    isGeneratingQr,
+    qrError,
+    handleGenerateQr,
     isUpdateSheetOpen,
     openUpdateSheet,
     closeUpdateSheet,
@@ -167,6 +172,10 @@ export const DeliveryProofScreen: React.FC<DeliveryProofScreenProps> = ({ naviga
               partialAmount={partialAmount}
               partialAmountError={partialAmountError}
               qrAmount={qrAmount}
+              qr={paymentQr}
+              isGeneratingQr={isGeneratingQr}
+              qrError={qrError}
+              onGenerateQr={handleGenerateQr}
             />
 
             <View>
@@ -186,6 +195,7 @@ export const DeliveryProofScreen: React.FC<DeliveryProofScreenProps> = ({ naviga
             visible={isUpdateSheetOpen}
             orderNumber={activeDelivery.orderNumber}
             currentItems={cylinderItems}
+            submitting={isLoading}
             onClose={closeUpdateSheet}
             onConfirm={handleConfirmUpdate}
           />

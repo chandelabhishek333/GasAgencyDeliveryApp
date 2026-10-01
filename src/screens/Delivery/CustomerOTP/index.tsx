@@ -36,7 +36,7 @@ export const CustomerOTPScreen: React.FC<CustomerOTPScreenProps> = ({ navigation
         {activeDelivery ? (
           <View style={styles.customerChip}>
             <Text style={styles.customerChipText}>
-              Verifying delivery for {activeDelivery.customerName}
+              Verifying delivery for {activeDelivery.customer.name}
             </Text>
           </View>
         ) : null}

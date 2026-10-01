@@ -8,7 +8,6 @@ import { OrderItemGroup } from '../../../components/delivery/OrderItemGroup';
 import { PLACEHOLDER_DROPOFF_NOTE } from '../../../constants/placeholders';
 import { formatRupees } from '../../../utils/formatRupees';
 import { formatDeliveryDate } from '../../../utils/formatShortDate';
-import { getPayableAmount } from '../../../utils/getPayableAmount';
 import { ORDER_STATUS_BADGE_VARIANT, ORDER_STATUS_LABEL } from '../../../utils/orderStatusMeta';
 import { Colors } from '../../../theme';
 import { styles } from './styles';
@@ -36,6 +35,8 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
     handleCallPress,
     handleNavigatePress,
     handleOutForDelivery,
+    isStarting,
+    startError,
   } = useOrderDetail(navigation, route);
 
   const cylinderItems = order?.items.filter((item) => item.kind === 'cylinderDelivery') ?? [];
@@ -71,7 +72,7 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
 
             <View style={styles.customerCard}>
               <View style={styles.customerHeaderRow}>
-                <Text style={styles.customerName}>{order.customerName}</Text>
+                <Text style={styles.customerName}>{order.customer.name}</Text>
                 <Pressable
                   onPress={handleCallPress}
                   accessibilityRole="button"
@@ -80,8 +81,8 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
                   <Text style={styles.callButtonIcon}>📞</Text>
                 </Pressable>
               </View>
-              <Text style={styles.customerPhone}>{order.customerPhone}</Text>
-              <Text style={styles.customerAddress}>{order.address}</Text>
+              <Text style={styles.customerPhone}>{order.customer.phone}</Text>
+              <Text style={styles.customerAddress}>{order.customer.address}</Text>
 
               <Pressable
                 onPress={handleNavigatePress}
@@ -119,7 +120,7 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
             <View>
               <Text style={styles.sectionTitle}>Delivery Location & Instructions</Text>
               <View style={styles.noteCard}>
-                <Text style={styles.noteAddress}>📍 {order.address}</Text>
+                <Text style={styles.noteAddress}>📍 {order.customer.address}</Text>
                 <Text style={styles.noteText}>{PLACEHOLDER_DROPOFF_NOTE}</Text>
               </View>
             </View>
@@ -128,15 +129,37 @@ export const OrderDetailScreen: React.FC<OrderDetailScreenProps> = ({ navigation
               <Text style={styles.sectionTitle}>Bill & Payment Details</Text>
               <View style={styles.billCard}>
                 <View style={styles.billRow}>
+                  <Text style={styles.billLabel}>Order Subtotal</Text>
+                  <Text style={styles.billValue}>{formatRupees(order.billing.orderSubtotal)}</Text>
+                </View>
+                {order.billing.taxAmount > 0 ? (
+                  <View style={styles.billRow}>
+                    <Text style={styles.billLabel}>Tax</Text>
+                    <Text style={styles.billValue}>{formatRupees(order.billing.taxAmount)}</Text>
+                  </View>
+                ) : null}
+                {order.billing.customerPreviousBalance > 0 ? (
+                  <View style={styles.billRow}>
+                    <Text style={styles.billLabel}>Previous Balance</Text>
+                    <Text style={styles.billValue}>{formatRupees(order.billing.customerPreviousBalance)}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.billRow}>
                   <Text style={styles.billTotalLabel}>Payable Amount</Text>
-                  <Text style={styles.billTotalValue}>{formatRupees(getPayableAmount(order))}</Text>
+                  <Text style={styles.billTotalValue}>{formatRupees(order.billing.totalPayableAmount)}</Text>
                 </View>
               </View>
             </View>
           </ScrollView>
 
           <View style={styles.footer}>
-            <Button label="Out for Delivery" onPress={handleOutForDelivery} size="lg" />
+            {startError ? <Text style={styles.footerError}>{startError}</Text> : null}
+            <Button
+              label={order.status === 'out_for_delivery' ? 'Continue Delivery' : 'Out for Delivery'}
+              onPress={handleOutForDelivery}
+              loading={isStarting}
+              size="lg"
+            />
           </View>
         </>
       )}

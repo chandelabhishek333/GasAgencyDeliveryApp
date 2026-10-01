@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Animated, Image, Pressable, Text, TextInput, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Button } from '../../common/Button';
 import { Colors } from '../../../theme';
 import { formatRupees } from '../../../utils/formatRupees';
 import { PAYMENT_METHOD_LABEL, PAYMENT_SPLIT_LABEL } from '../../../utils/paymentMeta';
 import { styles } from './styles';
-import type { DeliveryPaymentMethod, DeliveryPaymentSplit } from '../../../types';
+import type { DeliveryPaymentMethod, DeliveryPaymentSplit, GenerateQrResponse } from '../../../types';
 import type { PaymentCollectionCardProps } from './types';
 
 const METHOD_OPTIONS: { value: DeliveryPaymentMethod; label: string }[] = [
   { value: 'cash', label: PAYMENT_METHOD_LABEL.cash },
-  { value: 'upiQr', label: PAYMENT_METHOD_LABEL.upiQr },
+  { value: 'upi_qr', label: PAYMENT_METHOD_LABEL.upi_qr },
 ];
 
 /** Cash gets a ₹ badge; QR / UPI a QR glyph — both drawn, not emoji. */
@@ -31,26 +31,72 @@ const MethodIcon: React.FC<{ method: DeliveryPaymentMethod; selected: boolean }>
     />
   );
 
+const formatCountdown = (seconds: number): string =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+
 /**
- * Placeholder QR card: a real dynamic UPI QR needs a backend / payment
- * gateway endpoint (none in the API yet) and a QR renderer. This shows the
- * amount to collect and the waiting state so the flow can be exercised.
+ * The dynamic UPI QR from POST generate-qr: the server's QR image (the
+ * glyph stands in when there's no image URL or it fails to load), the
+ * exact amount, and a countdown to `expiresInSeconds` — once expired the
+ * driver regenerates.
  */
-const QrCard: React.FC<{ amount: number }> = ({ amount }) => (
-  <RevealOnMount>
-    <View style={styles.qrCard}>
-      <View style={styles.qrBox}>
-        <Ionicons name="qr-code" size={112} color={Colors.textSecondary} />
-        <Text style={styles.qrBrand}>MBGA · UPI</Text>
+const QrCard: React.FC<{ qr: GenerateQrResponse; onRegenerate: () => void; regenerating: boolean }> = ({
+  qr,
+  onRegenerate,
+  regenerating,
+}) => {
+  const [secondsLeft, setSecondsLeft] = useState(qr.expiresInSeconds);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setSecondsLeft(qr.expiresInSeconds);
+    setImageFailed(false);
+    if (qr.expiresInSeconds <= 0) {
+      return undefined;
+    }
+    const timer = setInterval(() => setSecondsLeft((seconds) => Math.max(0, seconds - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [qr]);
+
+  const isExpired = qr.expiresInSeconds > 0 && secondsLeft === 0;
+  const showImage = Boolean(qr.qrImageUrl) && !imageFailed;
+
+  return (
+    <RevealOnMount>
+      <View style={styles.qrCard}>
+        <View style={[styles.qrBox, isExpired && styles.qrBoxExpired]}>
+          {showImage ? (
+            <Image
+              source={{ uri: qr.qrImageUrl }}
+              style={styles.qrImage}
+              resizeMode="contain"
+              onError={() => setImageFailed(true)}
+              accessibilityLabel={`UPI QR code for ${formatRupees(qr.amount)}`}
+            />
+          ) : (
+            <Ionicons name="qr-code" size={112} color={Colors.textSecondary} />
+          )}
+          <Text style={styles.qrBrand}>MBGA · UPI · #{qr.orderNumber}</Text>
+        </View>
+        <Text style={styles.qrAmount}>Scan & Pay {formatRupees(qr.amount)}</Text>
+        {isExpired ? (
+          <>
+            <Text style={styles.errorText}>This QR has expired.</Text>
+            <Button label="Generate New QR" onPress={onRegenerate} loading={regenerating} variant="outline" />
+          </>
+        ) : (
+          <View style={styles.qrWaitingRow}>
+            <ActivityIndicator size="small" color={Colors.primary} />
+            <Text style={styles.qrWaitingText}>
+              Waiting for customer payment
+              {qr.expiresInSeconds > 0 ? ` · expires in ${formatCountdown(secondsLeft)}` : ''}
+            </Text>
+          </View>
+        )}
       </View>
-      <Text style={styles.qrAmount}>Scan & Pay {formatRupees(amount)}</Text>
-      <View style={styles.qrWaitingRow}>
-        <ActivityIndicator size="small" color={Colors.primary} />
-        <Text style={styles.qrWaitingText}>Waiting for customer payment confirmation</Text>
-      </View>
-    </View>
-  </RevealOnMount>
-);
+    </RevealOnMount>
+  );
+};
 
 const SPLIT_OPTIONS: { value: DeliveryPaymentSplit; label: string }[] = [
   { value: 'full', label: PAYMENT_SPLIT_LABEL.full },
@@ -90,16 +136,13 @@ export const PaymentCollectionCard: React.FC<PaymentCollectionCardProps> = ({
   partialAmount,
   partialAmountError,
   qrAmount,
+  qr,
+  isGeneratingQr,
+  qrError,
+  onGenerateQr,
   testID,
 }) => {
-  const [isQrShown, setQrShown] = useState(false);
-
-  // Any change to method, split or amount invalidates a generated QR.
-  useEffect(() => {
-    setQrShown(false);
-  }, [method, split, qrAmount]);
-
-  const canGenerateQr = method === 'upiQr' && qrAmount !== null;
+  const canGenerateQr = method !== 'cash' && qrAmount !== null;
 
   return (
     <View style={styles.card} testID={testID}>
@@ -176,10 +219,13 @@ export const PaymentCollectionCard: React.FC<PaymentCollectionCardProps> = ({
         </RevealOnMount>
       )}
 
-      {canGenerateQr && !isQrShown ? (
-        <Button label="Generate QR" onPress={() => setQrShown(true)} variant="primary" />
+      {canGenerateQr && !qr ? (
+        <Button label="Generate QR" onPress={onGenerateQr} loading={isGeneratingQr} variant="primary" />
       ) : null}
-      {canGenerateQr && isQrShown && qrAmount !== null ? <QrCard amount={qrAmount} /> : null}
+      {canGenerateQr && qr ? (
+        <QrCard qr={qr} onRegenerate={onGenerateQr} regenerating={isGeneratingQr} />
+      ) : null}
+      {canGenerateQr && qrError ? <Text style={styles.errorText}>{qrError}</Text> : null}
     </View>
   );
 };

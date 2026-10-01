@@ -4,7 +4,6 @@ import { Header } from '../../../components/layout/Header';
 import { Badge } from '../../../components/common/Badge';
 import { Loader } from '../../../components/common/Loader';
 import { OrderItemGroup } from '../../../components/delivery/OrderItemGroup';
-import { PLACEHOLDER_DROPOFF_NOTE } from '../../../constants/placeholders';
 import { formatRupees } from '../../../utils/formatRupees';
 import { formatDeliveryDate } from '../../../utils/formatShortDate';
 import { ORDER_STATUS_BADGE_VARIANT, ORDER_STATUS_LABEL } from '../../../utils/orderStatusMeta';
@@ -15,16 +14,15 @@ import { useCompletedOrderDetail } from './useCompletedOrderDetail';
 import type { CompletedOrderDetailScreenProps } from './types';
 
 /**
- * Order Details for a delivered order: what was delivered/collected, where,
- * and how payment was settled. Read-only — no navigate chip and no footer
- * action, since the delivery is finished.
+ * Order Details for a finished order (GET /deliveries/{id}/completed-detail):
+ * what was delivered/collected, where, and how payment was settled.
+ * Read-only — no navigate chip and no footer action.
  */
 export const CompletedOrderDetailScreen: React.FC<CompletedOrderDetailScreenProps> = ({ navigation, route }) => {
-  const { order, isLoading, error, payment, totalAmount, pendingBalance, handleBack, handleCallPress } =
-    useCompletedOrderDetail(navigation, route);
-
-  const cylinderItems = order?.items.filter((item) => item.kind === 'cylinderDelivery') ?? [];
-  const emptyItems = order?.items.filter((item) => item.kind === 'emptyCollection') ?? [];
+  const { detail: order, isLoading, error, payment, handleBack, handleCallPress } = useCompletedOrderDetail(
+    navigation,
+    route,
+  );
 
   return (
     <View style={styles.container}>
@@ -44,7 +42,7 @@ export const CompletedOrderDetailScreen: React.FC<CompletedOrderDetailScreenProp
 
           <View style={styles.customerCard}>
             <View style={styles.customerHeaderRow}>
-              <Text style={styles.customerName}>{order.customerName}</Text>
+              <Text style={styles.customerName}>{order.customer.name}</Text>
               <Pressable
                 onPress={handleCallPress}
                 accessibilityRole="button"
@@ -54,15 +52,19 @@ export const CompletedOrderDetailScreen: React.FC<CompletedOrderDetailScreenProp
                 <Text style={styles.callButtonIcon}>📞</Text>
               </Pressable>
             </View>
-            <Text style={styles.customerPhone}>{order.customerPhone}</Text>
-            <Text style={styles.customerAddress}>📍 {order.address}</Text>
+            <Text style={styles.customerPhone}>{order.customer.phone}</Text>
+            <Text style={styles.customerAddress}>📍 {order.customer.address}</Text>
           </View>
 
           <View>
             <Text style={styles.sectionTitle}>Order Items</Text>
             <View style={styles.itemsList}>
-              {cylinderItems.length > 0 ? <OrderItemGroup title="Cylinders Delivered" items={cylinderItems} /> : null}
-              {emptyItems.length > 0 ? <OrderItemGroup title="Empty Cylinders Collected" items={emptyItems} /> : null}
+              {order.deliveredItems.length > 0 ? (
+                <OrderItemGroup title="Cylinders Delivered" items={order.deliveredItems} />
+              ) : null}
+              {order.emptyItems.length > 0 ? (
+                <OrderItemGroup title="Empty Cylinders Collected" items={order.emptyItems} />
+              ) : null}
               {order.deliveryDate ? (
                 <View style={styles.dateRow}>
                   <Text style={styles.slotText}>
@@ -73,13 +75,14 @@ export const CompletedOrderDetailScreen: React.FC<CompletedOrderDetailScreenProp
             </View>
           </View>
 
-          <View>
-            <Text style={styles.sectionTitle}>Delivery Location & Instructions</Text>
-            <View style={styles.noteCard}>
-              <Text style={styles.noteAddress}>📍 {order.address}</Text>
-              <Text style={styles.noteText}>{PLACEHOLDER_DROPOFF_NOTE}</Text>
+          {order.driverNotes ? (
+            <View>
+              <Text style={styles.sectionTitle}>Driver Notes</Text>
+              <View style={styles.noteCard}>
+                <Text style={styles.noteText}>{order.driverNotes}</Text>
+              </View>
             </View>
-          </View>
+          ) : null}
 
           <View>
             <Text style={styles.sectionTitle}>Payment & Settlement Details</Text>
@@ -97,23 +100,27 @@ export const CompletedOrderDetailScreen: React.FC<CompletedOrderDetailScreenProp
                   <View style={styles.settlementDivider} />
                   <View style={styles.settlementRow}>
                     <Text style={styles.settlementLabel}>Amount Paid</Text>
-                    <Text style={styles.amountPaidValue}>{formatRupees(payment.amount)}</Text>
+                    <Text style={styles.amountPaidValue}>{formatRupees(payment.amountPaid)}</Text>
                   </View>
-                  {pendingBalance > 0 ? (
+                  {payment.pendingBalance > 0 ? (
                     <View style={styles.settlementRow}>
                       <Text style={styles.settlementLabel}>Balance Pending</Text>
-                      <Text style={styles.pendingValue}>{formatRupees(pendingBalance)}</Text>
+                      <Text style={styles.pendingValue}>{formatRupees(payment.pendingBalance)}</Text>
                     </View>
                   ) : null}
                 </>
               ) : (
-                <Text style={styles.settlementUnavailable}>Payment details aren't available for this order yet.</Text>
+                <Text style={styles.settlementUnavailable}>No payment was recorded for this order.</Text>
               )}
-              <View style={styles.settlementDivider} />
-              <View style={styles.billRow}>
-                <Text style={styles.billTotalLabel}>Total Order Value</Text>
-                <Text style={styles.totalValue}>{formatRupees(totalAmount)}</Text>
-              </View>
+              {payment ? (
+                <>
+                  <View style={styles.settlementDivider} />
+                  <View style={styles.billRow}>
+                    <Text style={styles.billTotalLabel}>Total Order Value</Text>
+                    <Text style={styles.totalValue}>{formatRupees(payment.totalAmount)}</Text>
+                  </View>
+                </>
+              ) : null}
             </View>
           </View>
         </ScrollView>

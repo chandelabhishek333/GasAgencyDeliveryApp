@@ -9,11 +9,11 @@ import { styles } from './styles';
 import { useHomeScreen } from './useHomeScreen';
 import type { HomeScreenProps } from './types';
 
-type StatKey = 'pending' | 'inProgress' | 'completed';
+type StatKey = 'pending' | 'outForDelivery' | 'completed';
 
 const STAT_ITEMS: Array<{ key: StatKey; label: string; cellStyle: ViewStyle; textStyle: TextStyle }> = [
   { key: 'pending', label: 'Pending', cellStyle: styles.statPending, textStyle: styles.statPendingText },
-  { key: 'inProgress', label: 'In Progress', cellStyle: styles.statInProgress, textStyle: styles.statInProgressText },
+  { key: 'outForDelivery', label: 'In Progress', cellStyle: styles.statInProgress, textStyle: styles.statInProgressText },
   { key: 'completed', label: 'Completed', cellStyle: styles.statCompleted, textStyle: styles.statCompletedText },
 ];
 
@@ -150,14 +150,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 </View>
                 <View style={styles.nextHeaderRow}>
                   <Text style={styles.nextTitle}>
-                    {nextDelivery.customerName} (#{nextDelivery.orderNumber})
+                    {nextDelivery.customer.name} (#{nextDelivery.orderNumber})
                   </Text>
                   <View style={styles.nextArrowButton}>
                     <Text style={styles.nextArrowText}>➤</Text>
                   </View>
                 </View>
                 <Text style={styles.nextAddress}>
-                  📍 {nextDelivery.address}
+                  📍 {nextDelivery.customer.address}
                   {nextDelivery.distanceKm !== undefined ? ` • ${nextDelivery.distanceKm} km away` : ''}
                 </Text>
                 {cylinderRows.length > 0 ? (

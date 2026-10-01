@@ -1,15 +1,14 @@
 import type { InternalAxiosRequestConfig } from 'axios';
 import { resolveMockResponse } from './mockHandlers';
 
-/**
- * Canned data for one route, unwrapped from mockHandlers' `{success,data}`
- * envelope — the same data USE_MOCK_DATA mode would serve for it.
- * Throws if mockHandlers has no handler for the route.
- */
-const mockDataFor = <T>(method: string, url: string): T => {
-  const { data } = resolveMockResponse({ method, url } as InternalAxiosRequestConfig);
-  return (data as { data: T }).data;
-};
+type MockMethod = 'get' | 'post' | 'put' | 'patch';
+
+interface MockRequest {
+  method: MockMethod;
+  url: string;
+  /** Request body — the stateful mocks (confirm, update-items, …) read it. */
+  data?: unknown;
+}
 
 const isEmptyResult = (value: unknown): boolean =>
   value == null ||
@@ -18,25 +17,27 @@ const isEmptyResult = (value: unknown): boolean =>
     (value as { items: unknown[] }).items.length === 0);
 
 /**
- * Dev-only safety net while the real order/delivery endpoints aren't
- * live: if `request` fails (404, 5xx, anything) or resolves empty, serve
- * the mock for `method url` instead, so the orders list and the whole
- * delivery flow stay testable on a device. Production builds (and any
- * route without a mock) keep the real result / error untouched.
+ * Dev-only safety net: if `send` fails (404, 5xx, anything), its body
+ * doesn't map, or it maps to an empty list, the route's mock body is run
+ * through the same `map` instead — so the orders list and the whole
+ * delivery flow stay testable on a device while the test driver has no
+ * live deliveries. Mocks use the live wire shapes (see mockHandlers), so
+ * one mapper serves both. Production builds (and any route without a
+ * mock) keep the real result / error untouched.
  */
 export const withDevMockFallback = async <T>(
-  method: 'get' | 'post',
-  url: string,
-  request: () => Promise<T>,
+  request: MockRequest,
+  send: () => Promise<unknown>,
+  map: (body: unknown) => T,
 ): Promise<T> => {
   if (!__DEV__) {
-    return request();
+    return map(await send());
   }
 
   let result: T | undefined;
   let failure: unknown;
   try {
-    result = await request();
+    result = map(await send());
     if (!isEmptyResult(result)) {
       return result;
     }
@@ -44,20 +45,23 @@ export const withDevMockFallback = async <T>(
     failure = error;
   }
 
+  let mock: T;
   try {
-    const mock = mockDataFor<T>(method, url);
-    // eslint-disable-next-line no-console
-    // "no usable data" also covers a 200 whose shape the service doesn't
-    // parse yet (e.g. the live API's bare arrays vs the {success,data}
-    // envelope the services still expect).
-    console.warn(
-      `[mock] ${method.toUpperCase()} ${url} ${failure ? 'failed' : 'returned no usable data'} — using mock data (dev only)`,
-    );
-    return mock;
+    const { data } = resolveMockResponse({
+      method: request.method,
+      url: request.url,
+      data: request.data,
+    } as InternalAxiosRequestConfig);
+    mock = map(data);
   } catch {
     if (failure) {
       throw failure;
     }
     return result as T;
   }
+  // eslint-disable-next-line no-console
+  console.warn(
+    `[mock] ${request.method.toUpperCase()} ${request.url} ${failure ? 'failed' : 'returned no data'} — using mock data (dev only)`,
+  );
+  return mock;
 };

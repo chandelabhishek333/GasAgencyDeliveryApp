@@ -6,18 +6,22 @@ export const selectTodayDeliveries = (state: RootState) => state.delivery.today;
 export const selectActiveDelivery = (state: RootState) => state.delivery.activeDelivery;
 export const selectDeliveryDraft = (state: RootState) => state.delivery.draft;
 export const selectDriverLocation = (state: RootState) => state.delivery.driverLocation;
+export const selectLocationCheck = (state: RootState) => state.delivery.locationCheck;
+export const selectPaymentQr = (state: RootState) => state.delivery.paymentQr;
+export const selectPaymentQrStatus = (state: RootState) => state.delivery.qrStatus;
+export const selectPaymentQrError = (state: RootState) => state.delivery.qrError;
 export const selectLastCompletedSummary = (state: RootState) => state.delivery.lastCompletedSummary;
-/** Method + amount submitted with Confirm Delivery — for the OTP step / a future dynamic-QR screen. */
+/** The payment submitted with Confirm Delivery. */
 export const selectConfirmedPayment = (state: RootState) => state.delivery.confirmedPayment;
 export const selectTodayStatus = (state: RootState) => state.delivery.todayStatus;
 export const selectDeliveryActionStatus = (state: RootState) => state.delivery.actionStatus;
 export const selectDeliveryError = (state: RootState) => state.delivery.error;
 
-/** Screen 4's "Today's Deliveries" status breakdown (Pending/In Progress/Completed). */
+/** Home's "Today's Deliveries" status breakdown (Pending/Out for Delivery/Completed). */
 export const selectDeliveryStats = createSelector(selectTodayDeliveries, (deliveries) => ({
   total: deliveries.length,
   pending: deliveries.filter((delivery) => delivery.status === 'pending').length,
-  inProgress: deliveries.filter((delivery) => delivery.status === 'in_progress').length,
+  outForDelivery: deliveries.filter((delivery) => delivery.status === 'out_for_delivery').length,
   completed: deliveries.filter((delivery) => delivery.status === 'completed').length,
 }));
 

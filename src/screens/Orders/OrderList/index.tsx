@@ -11,12 +11,12 @@ import type { OrderListScreenProps } from './types';
 import type { OrderStatusFilter } from '../../../store/slices/ordersSlice';
 import type { Order } from '../../../types';
 
-type StatusCounts = { all: number; pending: number; inProgress: number; completed: number };
+type StatusCounts = { all: number; pending: number; outForDelivery: number; completed: number };
 
 const FILTER_TABS: Array<{ key: OrderStatusFilter; label: (n: StatusCounts) => string }> = [
   { key: 'all', label: (n) => `All (${n.all})` },
   { key: 'pending', label: (n) => `Pending (${n.pending})` },
-  { key: 'in_progress', label: (n) => `${ORDER_STATUS_LABEL.in_progress} (${n.inProgress})` },
+  { key: 'out_for_delivery', label: (n) => `${ORDER_STATUS_LABEL.out_for_delivery} (${n.outForDelivery})` },
   { key: 'completed', label: (n) => `${ORDER_STATUS_LABEL.completed} (${n.completed})` },
 ];
 

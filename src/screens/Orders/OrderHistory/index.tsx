@@ -7,7 +7,8 @@ import { Colors } from '../../../theme';
 import { styles } from './styles';
 import { useOrderHistory } from './useOrderHistory';
 import type { OrderHistoryScreenProps } from './types';
-import type { Order, OrderHistoryPeriod } from '../../../types';
+import { formatDeliveryDate } from '../../../utils/formatShortDate';
+import type { HistoryDeliveryEntry, OrderHistoryPeriod } from '../../../types';
 
 const PERIOD_TABS: Array<{ key: OrderHistoryPeriod; label: string }> = [
   { key: 'today', label: 'Today' },
@@ -15,7 +16,7 @@ const PERIOD_TABS: Array<{ key: OrderHistoryPeriod; label: string }> = [
   { key: 'all', label: 'All' },
 ];
 
-/** Screen 11 — Delivery History: period tabs + delivered-order cards. */
+/** Delivery History: period tabs + one card per finished delivery (GET /deliveries/history). */
 export const OrderHistoryScreen: React.FC<OrderHistoryScreenProps> = ({ navigation }) => {
   const { period, setPeriod, history, isInitialLoading, error, handleBack } =
     useOrderHistory(navigation);
@@ -52,29 +53,33 @@ export const OrderHistoryScreen: React.FC<OrderHistoryScreenProps> = ({ navigati
               data={history}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.listContent}
-              renderItem={({ item }: { item: Order }) => {
-                const cylinderItem = item.items.find((line) => line.kind === 'cylinderDelivery');
+              renderItem={({ item }: { item: HistoryDeliveryEntry }) => {
+                const isFailed = item.status === 'failed';
+                const when = item.completedAt
+                  ? `Delivered at ${item.completedAt}`
+                  : item.deliveryDate
+                    ? formatDeliveryDate(item.deliveryDate)
+                    : '';
                 return (
                   <View style={styles.card}>
                     <View style={styles.topRow}>
                       <View>
                         <Text style={styles.orderId}>#{item.orderNumber}</Text>
-                        <Text style={styles.time}>
-                          Delivered at {item.completedAt ?? item.timeSlotStart}
-                        </Text>
+                        {when ? <Text style={styles.time}>{when}</Text> : null}
                       </View>
-                      <Badge label="Delivered ✅" variant="delivered" size="sm" />
+                      <Badge
+                        label={isFailed ? 'Failed' : 'Delivered ✅'}
+                        variant={isFailed ? 'failed' : 'delivered'}
+                        size="sm"
+                      />
                     </View>
                     <View style={styles.bottomRow}>
                       <Text style={styles.customerName} numberOfLines={1}>
                         {item.customerName}
                       </Text>
-                      {cylinderItem ? (
+                      {item.itemsSummary ? (
                         <View style={styles.itemChip}>
-                          <Text style={styles.itemChipText}>
-                            {cylinderItem.quantity} × {cylinderItem.label}
-                            {cylinderItem.quantity === 1 ? '' : 's'}
-                          </Text>
+                          <Text style={styles.itemChipText}>{item.itemsSummary}</Text>
                         </View>
                       ) : null}
                     </View>

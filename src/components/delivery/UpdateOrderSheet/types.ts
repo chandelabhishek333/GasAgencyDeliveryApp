@@ -1,18 +1,20 @@
 export interface UpdateOrderSelection {
+  cylinderType: string;
   label: string;
   quantity: number;
-  unitPrice: number;
 }
 
 export interface UpdateOrderSheetProps {
   visible: boolean;
   orderNumber: string;
-  /** The order's current delivered lines — pre-fill the matching steppers (by cylinder size). */
-  currentItems: Array<{ label: string; quantity: number }>;
+  /** The order's current delivered lines — pre-fill the matching steppers (by cylinderType). */
+  currentItems: Array<{ cylinderType: string; label: string; quantity: number }>;
+  /** True while the update-items request is in flight. */
+  submitting?: boolean;
   onClose: () => void;
   /**
-   * Called with every catalog type and its count, including 0 — the
-   * reducer adds, updates or removes lines to match (see updateOrderItems).
+   * Called with every row and its count, including 0 — the full new set
+   * of cylinder types for PUT update-items (zero rows are dropped there).
    */
   onConfirm: (selections: UpdateOrderSelection[]) => void;
 }

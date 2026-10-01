@@ -1,11 +1,13 @@
-import { apiClient } from '../client';
-import { ORDER_ENDPOINTS } from '../endpoints/orderEndpoints';
-import { toOrder, toOrders, unwrapResponse } from '../mappers/deliveryMappers';
-import type { ApiDelivery } from '../mappers/deliveryMappers';
-import { withDevMockFallback } from '../mocks/devFallback';
-import type { Order, OrderListParams, Paginated } from '../../types';
+import { deliveryService } from './deliveryService';
+import type {
+  CompletedDeliveryDetail,
+  DeliveryHistoryPage,
+  DeliveryHistoryParams,
+  Order,
+  Paginated,
+} from '../../types';
 
-/** The live API returns plain arrays (no paging); the app's list state expects Paginated. */
+/** /deliveries/today is one unpaged list; the order list state expects Paginated. */
 const asSinglePage = (items: Order[]): Paginated<Order> => ({
   items,
   page: 1,
@@ -14,31 +16,28 @@ const asSinglePage = (items: Order[]): Paginated<Order> => ({
 });
 
 /**
- * Orders domain — order list, detail, and history, served by the live
- * API's /deliveries routes. Responses go through src/api/mappers. In dev
- * builds each call falls back to mock data if the real endpoint fails or
- * is empty (see withDevMockFallback).
+ * Orders domain — the Orders tab's view of the same /deliveries routes
+ * (see ORDER_ENDPOINTS). The live API has no per-id GET for an open
+ * order, so a detail is read from today's list.
  */
 export const orderService = {
-  // Only `limit` is a live query param; status/period filtering stays client-side.
-  async getOrders(params?: OrderListParams): Promise<Paginated<Order>> {
-    return withDevMockFallback('get', ORDER_ENDPOINTS.LIST, async () => {
-      const response = await apiClient.get(ORDER_ENDPOINTS.LIST, { params: { limit: params?.limit } });
-      return asSinglePage(toOrders(response.data));
-    });
+  async getOrders(): Promise<Paginated<Order>> {
+    return asSinglePage(await deliveryService.getTodayDeliveries());
   },
 
   async getOrderById(orderId: string): Promise<Order> {
-    return withDevMockFallback('get', ORDER_ENDPOINTS.DETAIL(orderId), async () => {
-      const response = await apiClient.get(ORDER_ENDPOINTS.DETAIL(orderId));
-      return toOrder(unwrapResponse<ApiDelivery | Order>(response.data));
-    });
+    const order = (await deliveryService.getTodayDeliveries()).find((item) => item.id === orderId);
+    if (!order) {
+      throw new Error("This order isn't in today's deliveries any more.");
+    }
+    return order;
   },
 
-  async getOrderHistory(params?: OrderListParams): Promise<Paginated<Order>> {
-    return withDevMockFallback('get', ORDER_ENDPOINTS.HISTORY, async () => {
-      const response = await apiClient.get(ORDER_ENDPOINTS.HISTORY, { params: { limit: params?.limit } });
-      return asSinglePage(toOrders(response.data));
-    });
+  async getOrderHistory(params?: DeliveryHistoryParams): Promise<DeliveryHistoryPage> {
+    return deliveryService.getDeliveryHistory(params);
+  },
+
+  async getCompletedOrderDetail(orderId: string): Promise<CompletedDeliveryDetail> {
+    return deliveryService.getCompletedDeliveryDetail(orderId);
   },
 };

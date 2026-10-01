@@ -10,6 +10,8 @@ export const selectOrderSearchQuery = (state: RootState) => state.orders.searchQ
 export const selectOrdersListStatus = (state: RootState) => state.orders.listStatus;
 export const selectOrderDetailStatus = (state: RootState) => state.orders.detailStatus;
 export const selectOrderHistoryStatus = (state: RootState) => state.orders.historyStatus;
+export const selectCompletedDetail = (state: RootState) => state.orders.completedDetail;
+export const selectCompletedDetailStatus = (state: RootState) => state.orders.completedDetailStatus;
 export const selectOrdersError = (state: RootState) => state.orders.error;
 
 /** Screen 5 — applies the active status filter + search query client-side. */
@@ -21,17 +23,17 @@ export const selectFilteredOrders = createSelector(
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       const matchesQuery =
         normalizedQuery.length === 0 ||
-        order.customerName.toLowerCase().includes(normalizedQuery) ||
+        order.customer.name.toLowerCase().includes(normalizedQuery) ||
         order.orderNumber.toLowerCase().includes(normalizedQuery);
       return matchesStatus && matchesQuery;
     });
   },
 );
 
-/** Screen 5's filter-tab counts: "All (12)", "Pending (8)", "Out for Delivery (2)", "Completed (2)". */
+/** Orders tab filter counts: "All (12)", "Pending (8)", "Out for Delivery (2)", "Completed (2)". */
 export const selectOrderStatusCounts = createSelector(selectOrders, (orders) => ({
   all: orders.length,
   pending: orders.filter((order) => order.status === 'pending').length,
-  inProgress: orders.filter((order) => order.status === 'in_progress').length,
+  outForDelivery: orders.filter((order) => order.status === 'out_for_delivery').length,
   completed: orders.filter((order) => order.status === 'completed').length,
 }));

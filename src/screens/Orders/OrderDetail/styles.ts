@@ -161,6 +161,18 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  billLabel: {
+    fontFamily: FontFamily.medium,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.label,
+    color: Colors.textMuted,
+  },
+  billValue: {
+    fontFamily: FontFamily.semiBold,
+    fontWeight: FontWeight.semiBold,
+    fontSize: FontSize.label,
+    color: Colors.textSecondary,
+  },
   billTotalLabel: {
     fontFamily: FontFamily.extraBold,
     fontWeight: FontWeight.extraBold,
@@ -177,6 +189,14 @@ export const styles = StyleSheet.create({
     paddingTop: Spacing.xs,
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.sm,
+  },
+  footerError: {
+    fontFamily: FontFamily.medium,
+    fontWeight: FontWeight.medium,
+    fontSize: FontSize.caption1,
+    color: Colors.errorRed,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
   },
   errorText: {
     fontFamily: FontFamily.medium,

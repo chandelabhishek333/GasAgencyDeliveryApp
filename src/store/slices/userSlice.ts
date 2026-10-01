@@ -1,8 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { userService } from '../../api/services/userService';
 import { getErrorMessage } from '../../utils/getErrorMessage';
-import type { DriverInventory } from '../../api/mappers/deliveryMappers';
-import type { Driver } from '../../types';
+import type { Driver, DriverInventory } from '../../types';
 
 interface UserState {
   profile: Driver | null;

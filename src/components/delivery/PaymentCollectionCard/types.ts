@@ -1,4 +1,4 @@
-import type { DeliveryPaymentMethod, DeliveryPaymentSplit } from '../../../types';
+import type { DeliveryPaymentMethod, DeliveryPaymentSplit, GenerateQrResponse } from '../../../types';
 
 export interface PaymentCollectionCardProps {
   /** Full amount the customer owes, in rupees. */
@@ -20,5 +20,11 @@ export interface PaymentCollectionCardProps {
    * QR" only appears for QR / UPI when this is set.
    */
   qrAmount: number | null;
+  /** The QR from POST generate-qr; null until generated (and after any method/split/amount change). */
+  qr: GenerateQrResponse | null;
+  isGeneratingQr: boolean;
+  qrError?: string | null;
+  /** Calls POST generate-qr for `qrAmount`. */
+  onGenerateQr: () => void;
   testID?: string;
 }

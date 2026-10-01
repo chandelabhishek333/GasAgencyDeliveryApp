@@ -1,4 +1,22 @@
-import type { Delivery, Driver, Notification, Order, OrderItem } from '../../types';
+import { CYLINDER_CATALOG } from '../../constants/cylinderCatalog';
+import { emptyLabelFor } from '../../utils/cylinderSize';
+import type { ApiDelivery } from '../mappers/deliveryMappers';
+import type {
+  ApiPaymentMethod,
+  CylinderType,
+  DeliveryItemResponse,
+  DeliveryPaymentSplit,
+  Driver,
+  EmptyReturnItem,
+  HistoryDeliveryEntry,
+  Notification,
+  ShiftStats,
+} from '../../types';
+
+/**
+ * Canned data in the live API's wire shapes (docs/MBGA_Delivery_API_Specification.md
+ * v3.0), so it goes through the same mappers as a live response.
+ */
 
 export const MOCK_DRIVER: Driver = {
   id: 'driver-1',
@@ -10,230 +28,161 @@ export const MOCK_DRIVER: Driver = {
   avatarInitials: 'RK',
 };
 
-const buildItems = (id: string, quantity: number): OrderItem[] => [
-  { id: `${id}-cylinder`, kind: 'cylinderDelivery', label: '19 KG Cylinder', quantity },
-  { id: `${id}-empty`, kind: 'emptyCollection', label: '19 KG Empty', quantity },
-];
+export const MOCK_SHIFT_STATS: ShiftStats = {
+  completedDeliveriesToday: 2,
+  cashCollectedToday: 24250,
+  totalEmptiesCollectedToday: 12,
+};
 
-/** Mixed-size order (19 KG + 47.5 KG) — exercises Order Detail's multi-cylinder layout. */
-const buildMixedItems = (id: string, commercial: number, industrial: number): OrderItem[] => [
-  { id: `${id}-cylinder-19`, kind: 'cylinderDelivery', label: '19 KG Commercial', quantity: commercial },
-  { id: `${id}-cylinder-47`, kind: 'cylinderDelivery', label: '47.5 KG Industrial', quantity: industrial },
-  { id: `${id}-empty-19`, kind: 'emptyCollection', label: '19 KG Empty', quantity: commercial },
-  { id: `${id}-empty-47`, kind: 'emptyCollection', label: '47.5 KG Empty', quantity: industrial },
-];
+const catalogEntry = (cylinderType: string) =>
+  CYLINDER_CATALOG.find((entry) => entry.cylinderType === cylinderType) ?? {
+    cylinderType,
+    label: cylinderType,
+    unitPrice: 0,
+  };
+
+export const buildMockItem = (cylinderType: string, quantity: number): DeliveryItemResponse => {
+  const { label, unitPrice } = catalogEntry(cylinderType);
+  return { cylinderType, label, quantity, unitPrice, totalPrice: unitPrice * quantity };
+};
+
+export const buildMockEmptyReturn = (
+  cylinderType: string,
+  currentOrderQuantity: number,
+  customerPreviousDue = 0,
+): EmptyReturnItem => ({
+  cylinderType,
+  label: emptyLabelFor(catalogEntry(cylinderType).label),
+  currentOrderQuantity,
+  customerPreviousDue,
+  expectedQuantity: currentOrderQuantity + customerPreviousDue,
+});
+
+/** Billing for a set of lines: subtotal = Σ line totals, payable = subtotal + tax + previous balance. */
+export const buildMockBilling = (items: DeliveryItemResponse[], customerPreviousBalance = 0): ApiDelivery['billing'] => {
+  const orderSubtotal = items.reduce((total, item) => total + item.totalPrice, 0);
+  return { orderSubtotal, taxAmount: 0, customerPreviousBalance, totalPayableAmount: orderSubtotal + customerPreviousBalance };
+};
 
 /**
- * Today's local date as ISO "YYYY-MM-DD" (the API's format) — computed,
- * not frozen, so these "today's deliveries" always match the dashboard's
- * date badge, whenever the app is opened.
+ * Today's local date as ISO "YYYY-MM-DD" — computed, not frozen, so these
+ * "today's deliveries" always match the dashboard's date badge.
  */
 const toLocalIsoDate = (date: Date): string =>
   [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((part) => String(part).padStart(2, '0')).join('-');
-const MOCK_DELIVERY_DATE = toLocalIsoDate(new Date());
+const daysAgoDate = (n: number): string => toLocalIsoDate(new Date(Date.now() - n * 24 * 60 * 60_000));
+export const MOCK_TODAY = toLocalIsoDate(new Date());
+
+interface MockSeed {
+  id: string;
+  name: string;
+  address: string;
+  status: ApiDelivery['status'];
+  distanceKm: number;
+  /** [type, quantity, customer's previous empty due]. */
+  lines: Array<[CylinderType, number, number?]>;
+  previousBalance?: number;
+  isLocationCaptured?: boolean;
+  completedAt?: string;
+}
+
+let phoneSuffix = 10;
+const buildDelivery = (seed: MockSeed): ApiDelivery => {
+  const items = seed.lines.map(([type, quantity]) => buildMockItem(type, quantity));
+  phoneSuffix += 1;
+  return {
+    id: seed.id,
+    orderNumber: seed.id,
+    status: seed.status,
+    deliveryDate: MOCK_TODAY,
+    customer: {
+      id: `cust-${seed.id}`,
+      name: seed.name,
+      phone: `98765432${phoneSuffix}`,
+      address: seed.address,
+      latitude: 28.5921,
+      longitude: 77.386,
+      isLocationCaptured: seed.isLocationCaptured ?? true,
+    },
+    distanceKm: seed.distanceKm,
+    items,
+    emptyReturns: seed.lines.map(([type, quantity, due]) => buildMockEmptyReturn(type, quantity, due ?? 0)),
+    billing: buildMockBilling(items, seed.previousBalance ?? 0),
+    completedAt: seed.completedAt ?? null,
+  };
+};
 
 /**
- * 12 orders matching the dashboard's "12 Orders / 8 Pending / 2 In
- * Progress / 2 Completed" breakdown exactly — Home's stats and Order
- * List's filter-tab counts are both derived from this same list, so
- * keeping it consistent here keeps the whole app consistent.
+ * 12 deliveries matching the dashboard's "12 Orders / 8 Pending / 2 Out
+ * for Delivery / 2 Completed" breakdown — Home's stats and Order List's
+ * filter-tab counts are both derived from this same list.
  */
-export const MOCK_TODAY_DELIVERIES: Delivery[] = [
-  {
-    id: 'ORD1256',
-    orderNumber: 'ORD1256',
-    customerName: 'ABC Restaurant',
-    customerPhone: '+91 98765 43210',
-    address: 'Sector 61, Noida',
-    timeSlotStart: '10:50 AM',
-    timeSlotEnd: '12:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 1.8,
-    items: buildMixedItems('ORD1256', 5, 2),
-  },
-  {
-    id: 'ORD1257',
-    orderNumber: 'ORD1257',
-    customerName: 'Hotel Sunrise',
-    customerPhone: '+91 98765 43211',
-    address: 'Indirapuram, Ghaziabad',
-    timeSlotStart: '10:30 AM',
-    timeSlotEnd: '12:30 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 3.2,
-    items: buildMixedItems('ORD1257', 4, 2),
-  },
-  {
-    id: 'ORD1258',
-    orderNumber: 'ORD1258',
-    customerName: 'Green Mart',
-    customerPhone: '+91 98765 43212',
-    address: 'Sector 18, Noida',
-    timeSlotStart: '12:00 PM',
-    timeSlotEnd: '1:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 2.1,
-    items: buildItems('ORD1258', 6),
-  },
-  {
-    id: 'ORD1259',
-    orderNumber: 'ORD1259',
-    customerName: 'City Bites',
-    customerPhone: '+91 98765 43213',
-    address: 'Sector 50, Noida',
-    timeSlotStart: '09:00 AM',
-    timeSlotEnd: '10:00 AM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'in_progress',
-    distanceKm: 0.9,
-    items: buildItems('ORD1259', 3),
-  },
-  {
-    id: 'ORD1260',
-    orderNumber: 'ORD1260',
-    customerName: 'Metro Hotel',
-    customerPhone: '+91 98765 43214',
-    address: 'Sector 63, Noida',
-    timeSlotStart: '1:00 PM',
-    timeSlotEnd: '2:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 4.5,
-    items: buildItems('ORD1260', 8),
-  },
-  {
-    id: 'ORD1261',
-    orderNumber: 'ORD1261',
-    customerName: 'Green Valley Restaurant',
-    customerPhone: '+91 98765 43215',
-    address: 'Sector 15, Noida',
-    timeSlotStart: '2:00 PM',
-    timeSlotEnd: '3:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 2.7,
-    items: buildItems('ORD1261', 5),
-  },
-  {
-    id: 'ORD1262',
-    orderNumber: 'ORD1262',
-    customerName: 'Sunshine Bakery',
-    customerPhone: '+91 98765 43216',
-    address: 'Sector 76, Noida',
-    timeSlotStart: '3:00 PM',
-    timeSlotEnd: '4:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 5.3,
-    items: buildItems('ORD1262', 3),
-  },
-  {
-    id: 'ORD1263',
-    orderNumber: 'ORD1263',
-    customerName: 'Royal Kitchen',
-    customerPhone: '+91 98765 43217',
-    address: 'Sector 44, Noida',
-    timeSlotStart: '11:00 AM',
-    timeSlotEnd: '12:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'in_progress',
-    distanceKm: 1.4,
-    items: buildItems('ORD1263', 6),
-  },
-  {
-    id: 'ORD1264',
-    orderNumber: 'ORD1264',
-    customerName: 'Cafe Mocha',
-    customerPhone: '+91 98765 43218',
-    address: 'Sector 137, Noida',
-    timeSlotStart: '4:00 PM',
-    timeSlotEnd: '5:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 6.1,
-    items: buildItems('ORD1264', 4),
-  },
-  {
-    id: 'ORD1265',
-    orderNumber: 'ORD1265',
-    customerName: 'Spice Junction',
-    customerPhone: '+91 98765 43219',
-    address: 'Sector 62, Noida',
-    timeSlotStart: '5:00 PM',
-    timeSlotEnd: '6:00 PM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'pending',
-    distanceKm: 2.9,
-    items: buildMixedItems('ORD1265', 3, 2),
-  },
-  {
-    id: 'ORD1253',
-    orderNumber: 'ORD1253',
-    customerName: 'Food Plaza',
-    customerPhone: '+91 98765 43220',
-    address: 'Sector 18, Noida',
-    timeSlotStart: '09:00 AM',
-    timeSlotEnd: '10:00 AM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'completed',
-    distanceKm: 2.0,
-    items: buildItems('ORD1253', 5),
-    completedAt: '10:15 AM',
-    payment: { method: 'cash', split: 'full', amount: 14250, payableAmount: 14250 },
-  },
-  {
-    id: 'ORD1254',
-    orderNumber: 'ORD1254',
-    customerName: 'The Grand Hotel',
-    customerPhone: '+91 98765 43221',
-    address: 'Sector 50, Noida',
-    timeSlotStart: '10:00 AM',
-    timeSlotEnd: '11:00 AM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'completed',
-    distanceKm: 1.2,
-    items: buildItems('ORD1254', 7),
-    completedAt: '11:20 AM',
-    payment: { method: 'upiQr', split: 'partial', amount: 10000, payableAmount: 14250 },
-  },
+const TODAY_SEEDS: MockSeed[] = [
+  { id: 'ORD1256', name: 'ABC Restaurant', address: 'Sector 61, Noida', status: 'pending', distanceKm: 1.8,
+    lines: [['19_KG_COMMERCIAL', 5, 1], ['47.5_KG_INDUSTRIAL', 2]], previousBalance: 1500 },
+  { id: 'ORD1257', name: 'Hotel Sunrise', address: 'Indirapuram, Ghaziabad', status: 'pending', distanceKm: 3.2,
+    lines: [['19_KG_COMMERCIAL', 4, 1], ['47.5_KG_INDUSTRIAL', 2]], isLocationCaptured: false },
+  { id: 'ORD1258', name: 'Green Mart', address: 'Sector 18, Noida', status: 'pending', distanceKm: 2.1,
+    lines: [['19_KG_COMMERCIAL', 6]] },
+  { id: 'ORD1259', name: 'City Bites', address: 'Sector 50, Noida', status: 'out_for_delivery', distanceKm: 0.9,
+    lines: [['19_KG_COMMERCIAL', 3]] },
+  { id: 'ORD1260', name: 'Metro Hotel', address: 'Sector 63, Noida', status: 'pending', distanceKm: 4.5,
+    lines: [['19_KG_COMMERCIAL', 8, 2]] },
+  { id: 'ORD1261', name: 'Green Valley Restaurant', address: 'Sector 15, Noida', status: 'pending', distanceKm: 2.7,
+    lines: [['19_KG_COMMERCIAL', 5]] },
+  { id: 'ORD1262', name: 'Sunshine Bakery', address: 'Sector 76, Noida', status: 'pending', distanceKm: 5.3,
+    lines: [['14.2_KG_DOMESTIC', 3]], isLocationCaptured: false },
+  { id: 'ORD1263', name: 'Royal Kitchen', address: 'Sector 44, Noida', status: 'out_for_delivery', distanceKm: 1.4,
+    lines: [['19_KG_COMMERCIAL', 6]] },
+  { id: 'ORD1264', name: 'Cafe Mocha', address: 'Sector 137, Noida', status: 'pending', distanceKm: 6.1,
+    lines: [['5_KG_DOMESTIC', 4]] },
+  { id: 'ORD1265', name: 'Spice Junction', address: 'Sector 62, Noida', status: 'pending', distanceKm: 2.9,
+    lines: [['19_KG_COMMERCIAL', 3], ['35_KG_INDUSTRIAL', 2]] },
+  { id: 'ORD1253', name: 'Food Plaza', address: 'Sector 18, Noida', status: 'completed', distanceKm: 2.0,
+    lines: [['19_KG_COMMERCIAL', 5]], completedAt: '10:15 AM' },
+  { id: 'ORD1254', name: 'The Grand Hotel', address: 'Sector 50, Noida', status: 'completed', distanceKm: 1.2,
+    lines: [['19_KG_COMMERCIAL', 4], ['47.5_KG_INDUSTRIAL', 1]], completedAt: '11:20 AM' },
 ];
 
-/** Delivery History — today's 4 completed deliveries, newest first (matches Screen 11). */
-export const MOCK_ORDER_HISTORY: Order[] = [
-  MOCK_TODAY_DELIVERIES.find((order) => order.id === 'ORD1254')!,
-  MOCK_TODAY_DELIVERIES.find((order) => order.id === 'ORD1253')!,
+export const MOCK_TODAY_DELIVERIES: ApiDelivery[] = TODAY_SEEDS.map(buildDelivery);
+
+/** How each already-completed mock delivery was settled — feeds completed-detail and history. */
+export interface MockSettlement {
+  method: ApiPaymentMethod;
+  split: DeliveryPaymentSplit;
+  amountPaid: number;
+  /** Empties collected per type; types left out were collected in full. */
+  emptiesCollected?: Partial<Record<CylinderType, number>>;
+  driverNotes?: string;
+}
+
+export const MOCK_SETTLEMENTS: Record<string, MockSettlement> = {
+  ORD1253: { method: 'cash', split: 'full', amountPaid: 9000 },
+  ORD1254: {
+    method: 'upi_qr',
+    split: 'partial',
+    amountPaid: 10000,
+    emptiesCollected: { '19_KG_COMMERCIAL': 3 },
+    driverNotes: '1 empty 19 KG pending for next delivery.',
+  },
+};
+
+/** Older finished deliveries — only ever seen in Delivery History. */
+export const MOCK_PAST_HISTORY: HistoryDeliveryEntry[] = [
   {
-    id: 'ORD1252',
-    orderNumber: 'ORD1252',
-    customerName: 'City Mart',
-    customerPhone: '+91 98765 43222',
-    address: 'Sector 16, Noida',
-    timeSlotStart: '08:30 AM',
-    timeSlotEnd: '09:30 AM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'completed',
-    distanceKm: 1.6,
-    items: buildItems('ORD1252', 5),
-    completedAt: '09:30 AM',
-    payment: { method: 'upiQr', split: 'full', amount: 14250, payableAmount: 14250 },
+    id: 'ORD1252', orderNumber: 'ORD1252', customerName: 'City Mart', status: 'completed',
+    deliveryDate: daysAgoDate(1), completedAt: '09:30 AM', totalDeliveredCount: 5, totalEmptiesCount: 5,
+    itemsSummary: '5 × 19 KG', payment: { method: 'upi_qr', amount: 9000, status: 'FULL' },
   },
   {
-    id: 'ORD1251',
-    orderNumber: 'ORD1251',
-    customerName: 'Hotel Crown',
-    customerPhone: '+91 98765 43223',
-    address: 'Sector 12, Noida',
-    timeSlotStart: '08:00 AM',
-    timeSlotEnd: '09:00 AM',
-    deliveryDate: MOCK_DELIVERY_DATE,
-    status: 'completed',
-    distanceKm: 2.4,
-    items: buildItems('ORD1251', 5),
-    completedAt: '08:45 AM',
-    payment: { method: 'cash', split: 'partial', amount: 8000, payableAmount: 14250 },
+    id: 'ORD1251', orderNumber: 'ORD1251', customerName: 'Hotel Crown', status: 'completed',
+    deliveryDate: daysAgoDate(3), completedAt: '08:45 AM', totalDeliveredCount: 6, totalEmptiesCount: 4,
+    itemsSummary: '4 × 19 KG, 2 × 47.5 KG', payment: { method: 'cash', amount: 8000, status: 'PARTIAL' },
+  },
+  {
+    id: 'ORD1240', orderNumber: 'ORD1240', customerName: 'Shree Caterers', status: 'failed',
+    deliveryDate: daysAgoDate(12), totalDeliveredCount: 0, totalEmptiesCount: 0,
+    itemsSummary: '3 × 19 KG', payment: null,
   },
 ];
 

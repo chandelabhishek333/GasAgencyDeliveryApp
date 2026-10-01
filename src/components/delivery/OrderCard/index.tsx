@@ -25,10 +25,10 @@ export const OrderCard: React.FC<OrderCardProps> = ({ order, onPress, testID }) 
 
     <View style={styles.body}>
       <Text style={styles.customerName} numberOfLines={1}>
-        {order.customerName}
+        {order.customer.name}
       </Text>
       <Text style={styles.detailText} numberOfLines={1}>
-        📍 {order.address}
+        📍 {order.customer.address}
       </Text>
       {order.deliveryDate ? (
         <Text style={styles.detailText}>{formatDeliveryDate(order.deliveryDate)}</Text>

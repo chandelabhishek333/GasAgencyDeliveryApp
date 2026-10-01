@@ -4,11 +4,11 @@ import type { OrderStatus } from '../../../types';
 import { styles } from './styles';
 import type { DeliveryStatusProps, DeliveryStatusStep } from './types';
 
-const STATUS_ORDER: OrderStatus[] = ['pending', 'in_progress', 'completed'];
+const STATUS_ORDER: OrderStatus[] = ['pending', 'out_for_delivery', 'completed'];
 
 const DEFAULT_STEPS: DeliveryStatusStep[] = [
   { key: 'pending', label: 'Pending' },
-  { key: 'in_progress', label: 'In Progress' },
+  { key: 'out_for_delivery', label: 'Out for Delivery' },
   { key: 'completed', label: 'Completed' },
 ];
 

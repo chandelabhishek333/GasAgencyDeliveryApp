@@ -8,13 +8,13 @@ import { formatRupees } from '../../../utils/formatRupees';
 import { PAYMENT_METHOD_LABEL, PAYMENT_SPLIT_LABEL } from '../../../utils/paymentMeta';
 import { styles } from './styles';
 import { useDeliveryComplete } from './useDeliveryComplete';
-import type { DeliverySummaryItem } from '../../../types';
+import type { ReceiptItem } from '../../../types';
 import type { DeliveryCompleteScreenProps } from './types';
 
 interface ReceiptItemsSectionProps {
   title: string;
   total: number;
-  items: DeliverySummaryItem[];
+  items: ReceiptItem[];
 }
 
 /**
@@ -35,7 +35,7 @@ const ReceiptItemsSection: React.FC<ReceiptItemsSectionProps> = ({ title, total,
           </View>
         </View>
         {items.map((item, index) => (
-          <View key={`${item.label}-${index}`} style={styles.receiptSubRow}>
+          <View key={`${item.cylinderType}-${index}`} style={styles.receiptSubRow}>
             <Text style={styles.receiptSubLabel}>{item.label}</Text>
             <Text style={styles.receiptSubValue}>{item.quantity}</Text>
           </View>
@@ -62,6 +62,7 @@ export const DeliveryCompleteScreen: React.FC<DeliveryCompleteScreenProps> = ({ 
     summary,
     deliveredItems,
     emptyItems,
+    emptiesAddedToDue,
     payment,
     isPartial,
     pendingBalance,
@@ -100,14 +101,20 @@ export const DeliveryCompleteScreen: React.FC<DeliveryCompleteScreenProps> = ({ 
               <View style={styles.receiptDivider} />
               <ReceiptItemsSection
                 title="Cylinders Delivered"
-                total={summary.deliveredQuantity}
+                total={summary.totalDeliveredQuantity}
                 items={deliveredItems}
               />
               <ReceiptItemsSection
                 title="Empty Cylinders Collected"
-                total={summary.emptyCollectedQuantity}
+                total={summary.totalEmptyCollectedQuantity}
                 items={emptyItems}
               />
+              {emptiesAddedToDue > 0 ? (
+                <View style={styles.receiptRow}>
+                  <Text style={styles.receiptLabel}>Empties Pending (added to customer due)</Text>
+                  <Text style={styles.pendingValue}>{emptiesAddedToDue}</Text>
+                </View>
+              ) : null}
 
               {payment ? (
                 <>
@@ -131,10 +138,14 @@ export const DeliveryCompleteScreen: React.FC<DeliveryCompleteScreenProps> = ({ 
                     </View>
                   </View>
                   <View style={styles.receiptRow}>
-                    <Text style={styles.receiptLabel}>Amount Collected</Text>
-                    <Text style={styles.receiptValueNeutral}>{formatRupees(payment.amount)}</Text>
+                    <Text style={styles.receiptLabel}>Bill Amount</Text>
+                    <Text style={styles.receiptValueNeutral}>{formatRupees(payment.totalBillAmount)}</Text>
                   </View>
-                  {isPartial ? (
+                  <View style={styles.receiptRow}>
+                    <Text style={styles.receiptLabel}>Amount Collected</Text>
+                    <Text style={styles.receiptValueNeutral}>{formatRupees(payment.amountCollected)}</Text>
+                  </View>
+                  {isPartial || pendingBalance > 0 ? (
                     <View style={styles.receiptRow}>
                       <Text style={styles.receiptLabel}>Pending Balance</Text>
                       <Text style={styles.pendingValue}>{formatRupees(pendingBalance)}</Text>

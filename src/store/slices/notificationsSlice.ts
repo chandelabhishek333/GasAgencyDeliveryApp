@@ -55,6 +55,18 @@ export const markNotificationRead = createAsyncThunk<string, string, { rejectVal
   },
 );
 
+/** POST /notifications/read-all — marks every notification read. */
+export const markAllNotificationsRead = createAsyncThunk<void, void, { rejectValue: string }>(
+  'notifications/markAllRead',
+  async (_, { rejectWithValue }) => {
+    try {
+      await userService.markAllNotificationsRead();
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  },
+);
+
 const notificationsSlice = createSlice({
   name: 'notifications',
   initialState,
@@ -84,6 +96,12 @@ const notificationsSlice = createSlice({
         if (notification) {
           notification.isRead = true;
         }
+      })
+      .addCase(markAllNotificationsRead.fulfilled, (state) => {
+        state.items.forEach((notification) => {
+          notification.isRead = true;
+        });
+        state.unreadCount = 0;
       });
   },
 });
