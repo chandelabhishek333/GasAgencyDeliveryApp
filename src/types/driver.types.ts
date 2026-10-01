@@ -13,6 +13,10 @@ export interface Driver {
   role: string;
   onDuty: boolean;
   avatarInitials?: string;
+  /** GET /auth/me `delivery_profile.employee_code`, e.g. "MBGA-TEST-DRV-001". */
+  employeeCode?: string;
+  /** GET /auth/me `approval_status`, e.g. "APPROVED" — drives the Verified Driver badge. */
+  approvalStatus?: string;
   /** Only on GET /driver/profile — the login/`/me` identity has no shift stats. */
   shiftStats?: ShiftStats;
 }

@@ -6,21 +6,17 @@ import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { fetchProfile } from '../../../store/slices/userSlice';
 import { logoutAll, logoutUser } from '../../../store/slices/authSlice';
 import { selectProfile, selectProfileStatus } from '../../../store/selectors/userSelectors';
-import { selectAccountStatus, selectDriver } from '../../../store/selectors/authSelectors';
+import { selectDriver } from '../../../store/selectors/authSelectors';
 import { getInitials } from '../../../utils/getInitials';
 import { ROUTES } from '../../../constants/routes';
+import type { Driver } from '../../../types';
 import type { ProfileMainScreenProps } from './types';
-
-// Trailing chars of the backend id, cosmetically dressed up as a
-// driver badge id — there's no separate `driverId` field on `Driver`.
-const formatDriverId = (id: string): string => `DRV-${id.slice(-4).toUpperCase()}`;
 
 export const useProfileMain = (navigation: ProfileMainScreenProps['navigation']) => {
   const dispatch = useAppDispatch();
   const sessionDriver = useAppSelector(selectDriver);
   const profile = useAppSelector(selectProfile);
   const status = useAppSelector(selectProfileStatus);
-  const accountStatus = useAppSelector(selectAccountStatus);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
   // Refetched on every focus, so today's shift stats are current after a delivery.
@@ -33,9 +29,17 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
   // GET /driver/profile carries both the driver info and today's shiftStats.
   const { refreshing, handleRefresh } = usePullToRefresh(useCallback(() => [dispatch(fetchProfile())], [dispatch]));
 
-  // Prefer the freshly-fetched full profile; fall back to the lighter
-  // session identity from login while it's loading.
-  const driver = profile ?? sessionDriver;
+  // The fresh GET /driver/profile wins field by field; employeeCode and
+  // approvalStatus only come from the session's GET /auth/me, so they're kept.
+  const latest = profile ?? sessionDriver;
+  const driver: Driver | null = latest
+    ? {
+        ...sessionDriver,
+        ...latest,
+        employeeCode: profile?.employeeCode || sessionDriver?.employeeCode,
+        approvalStatus: profile?.approvalStatus || sessionDriver?.approvalStatus,
+      }
+    : null;
 
   const handleLogout = async (): Promise<void> => {
     await dispatch(logoutUser());
@@ -70,8 +74,8 @@ export const useProfileMain = (navigation: ProfileMainScreenProps['navigation'])
     shiftStats: profile?.shiftStats ?? null,
     initials: driver ? driver.avatarInitials ?? getInitials(driver.name) : '',
     isLoading: status === 'loading' && !driver,
-    isVerified: accountStatus === 'ACTIVE',
-    driverIdLabel: driver ? formatDriverId(driver.id) : '',
+    isVerified: driver?.approvalStatus === 'APPROVED',
+    employeeCode: driver?.employeeCode || '',
     handleBack: () => navigation.goBack(),
     // TODO: EditProfile screen isn't built/registered in ProfileStack yet.
     handleEditAvatar: () => {},

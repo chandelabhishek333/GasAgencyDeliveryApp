@@ -332,6 +332,7 @@ export const resolveMockResponse = (config: InternalAxiosRequestConfig): MockRes
       user_type: 'DELIVERY_PARTNER',
       role: 'driver',
       account_status: 'ACTIVE',
+      approval_status: 'APPROVED',
       next_action: 'OPEN_DELIVERY_HOME',
       merchant: null,
       delivery_profile: {
@@ -339,6 +340,8 @@ export const resolveMockResponse = (config: InternalAxiosRequestConfig): MockRes
         vehicle_number: MOCK_DRIVER.vehicleNumber,
         on_duty: MOCK_DRIVER.onDuty,
         avatar_initials: MOCK_DRIVER.avatarInitials,
+        employee_code: 'MBGA-TEST-DRV-001',
+        approval_status: 'APPROVED',
       },
       display_name: MOCK_DRIVER.name,
       mobile_number: MOCK_DRIVER.phone,

@@ -55,7 +55,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             <Text style={styles.greetingLine}>
               {greeting} {driver?.name ?? ''}
             </Text>
-            <Text style={styles.vehicleText}>Vehicle: {driver?.vehicleNumber ?? '—'}</Text>
+            <Text style={styles.vehicleText}>Emp Code: {driver?.employeeCode || '—'}</Text>
           </View>
         </View>
       </View>

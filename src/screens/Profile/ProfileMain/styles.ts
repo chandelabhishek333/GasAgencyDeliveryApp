@@ -80,30 +80,32 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
   verifiedBadge: {
-    backgroundColor: Colors.badgeDoneBg,
+    backgroundColor: Colors.successLight,
+    borderWidth: 1,
+    borderColor: Colors.successBorder,
     borderRadius: BorderRadius.round,
-    paddingVertical: 3,
+    paddingVertical: 4,
     paddingHorizontal: Spacing.sm,
   },
   verifiedBadgeText: {
     fontFamily: FontFamily.bold,
     fontWeight: FontWeight.bold,
     fontSize: FontSize.caption2,
-    color: Colors.badgeDoneText,
+    color: Colors.successGreen,
   },
-  idBadge: {
-    backgroundColor: Colors.bgCard,
+  employeeBadge: {
+    backgroundColor: Colors.primaryLight,
     borderWidth: 1,
-    borderColor: Colors.borderCard,
+    borderColor: Colors.primaryBorder,
     borderRadius: BorderRadius.round,
-    paddingVertical: 3,
+    paddingVertical: 4,
     paddingHorizontal: Spacing.sm,
   },
-  idBadgeText: {
-    fontFamily: FontFamily.semiBold,
-    fontWeight: FontWeight.semiBold,
+  employeeBadgeText: {
+    fontFamily: FontFamily.bold,
+    fontWeight: FontWeight.bold,
     fontSize: FontSize.caption2,
-    color: Colors.textMuted,
+    color: Colors.primary,
   },
 
   // ---- Section B: Stats grid ----

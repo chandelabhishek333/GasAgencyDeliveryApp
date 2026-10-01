@@ -33,7 +33,7 @@ export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation
     shiftStats,
     initials,
     isVerified,
-    driverIdLabel,
+    employeeCode,
     handleBack,
     handleEditAvatar,
     handleMyDeliveries,
@@ -97,12 +97,12 @@ export const ProfileMainScreen: React.FC<ProfileMainScreenProps> = ({ navigation
           <View style={styles.badgeRow}>
             {isVerified ? (
               <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedBadgeText}>✅ Verified Driver</Text>
+                <Text style={styles.verifiedBadgeText}>✓ Verified Driver</Text>
               </View>
             ) : null}
-            {driverIdLabel ? (
-              <View style={styles.idBadge}>
-                <Text style={styles.idBadgeText}>ID: {driverIdLabel}</Text>
+            {employeeCode ? (
+              <View style={styles.employeeBadge}>
+                <Text style={styles.employeeBadgeText}>Emp Code: {employeeCode}</Text>
               </View>
             ) : null}
           </View>

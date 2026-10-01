@@ -112,6 +112,13 @@ export const authService = {
     const response = await apiClient.get<MeApiResponse>(AUTH_ENDPOINTS.ME);
     const data = response.data;
     const deliveryProfile = (data.delivery_profile ?? {}) as Record<string, unknown>;
+    // `profile` isn't in the documented /me shape — read only as a fallback.
+    const fallbackProfile = ((data as { profile?: Record<string, unknown> | null }).profile ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const employeeCode = String(deliveryProfile.employee_code || fallbackProfile.employee_code || '');
+    const approvalStatus = String(data.approval_status || deliveryProfile.approval_status || '');
     return {
       id: data.user_id,
       name: data.display_name || String(deliveryProfile.full_name ?? ''),
@@ -120,6 +127,8 @@ export const authService = {
       role: data.role,
       onDuty: Boolean(deliveryProfile.on_duty ?? deliveryProfile.is_on_duty ?? true),
       avatarInitials: typeof deliveryProfile.avatar_initials === 'string' ? deliveryProfile.avatar_initials : undefined,
+      employeeCode,
+      approvalStatus,
       accountStatus: data.account_status,
       effectivePermissions: data.effective_permissions ?? [],
     };

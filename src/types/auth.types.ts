@@ -103,9 +103,11 @@ export interface MeApiResponse {
   user_type: string;
   role: string;
   account_status: string;
+  /** e.g. "APPROVED" — also mirrored on `delivery_profile.approval_status`. */
+  approval_status?: string;
   next_action: string;
   merchant: Record<string, unknown> | null;
-  delivery_profile: Record<string, unknown> | null;
+  delivery_profile: (Record<string, unknown> & { employee_code?: string; approval_status?: string }) | null;
   display_name: string;
   mobile_number: string;
   country_code: string;
